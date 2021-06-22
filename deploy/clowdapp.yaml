@@ -19,16 +19,16 @@ objects:
       #!/bin/bash
       set -e
       if [[ ! -z "${ACG_CONFIG}" ]]; then
-        export DATABASE_HOST=`jq -r '.database.hostname' ${ACG_CONFIG}`
-        export DATABASE_PORT=`jq -r '.database.port' ${ACG_CONFIG}`
-        export DATABASE_USER=`jq -r '.database.username' ${ACG_CONFIG}`
-        export DATABASE_PASSWORD=`jq -r '.database.password' ${ACG_CONFIG}`
-        export DATABASE_NAME=`jq -r '.database.name' ${ACG_CONFIG}`
-        export DATABASE_SSLMODE=`jq -r '.database.sslMode' ${ACG_CONFIG}`
+        export DATABASE_HOST=$(jq -r '.database.hostname' ${ACG_CONFIG})
+        export DATABASE_PORT=$(jq -r '.database.port' ${ACG_CONFIG})
+        export DATABASE_USER=$(jq -r '.database.username' ${ACG_CONFIG})
+        export DATABASE_PASSWORD=$(jq -r '.database.password' ${ACG_CONFIG})
+        export DATABASE_NAME=$(jq -r '.database.name' ${ACG_CONFIG})
+        export DATABASE_SSLMODE=$(jq -r '.database.sslMode' ${ACG_CONFIG})
         if [[ $DATABASE_SSLMODE = "null" ]]; then
           unset DATABASE_SSLMODE
         fi
-        certString=`jq -r '.database.rdsCa' ${ACG_CONFIG}`
+        certString=$(jq -r '.database.rdsCa' ${ACG_CONFIG})
         if [[ $certString != "null" ]]; then
           temp_file=$(mktemp)
           echo "RDS Cert Path: $temp_file"
@@ -68,17 +68,24 @@ objects:
       set -e
 
       if [[ ! -z "${ACG_CONFIG}" ]]; then
-        export AWS_ACCESS_KEY_ID=`jq -r '.objectStore.buckets[0].accessKey' ${ACG_CONFIG}`
-        export AWS_SECRET_ACCESS_KEY=`jq -r '.objectStore.buckets[0].secretKey' ${ACG_CONFIG}`
-        export S3_BUCKET_NAME=`jq -r '.objectStore.buckets[0].requestedName' ${ACG_CONFIG}`
-        export OBJECTSTORE_HOST=`jq -r '.objectStore.hostname' ${ACG_CONFIG}`
-        export OBJECTSTORE_PORT=`jq -r '.objectStore.port' ${ACG_CONFIG}`
-        export OBJECTSTORE_TLS=`jq -r '.objectStore.tls' ${ACG_CONFIG}`
+        export AWS_ACCESS_KEY_ID=$(jq -r '.objectStore.buckets[0].accessKey' ${ACG_CONFIG})
+        export AWS_SECRET_ACCESS_KEY=$(jq -r '.objectStore.buckets[0].secretKey' ${ACG_CONFIG})
+        export S3_BUCKET_NAME=$(jq -r '.objectStore.buckets[0].requestedName' ${ACG_CONFIG})
+
+        OBJECTSTORE_HOST=$(jq -r '.objectStore.hostname' ${ACG_CONFIG})
+        OBJECTSTORE_PORT=$(jq -r '.objectStore.port' ${ACG_CONFIG})
+        OBJECTSTORE_TLS=$(jq -r '.objectStore.tls' ${ACG_CONFIG})
+
         export URI_PREFIX=https
         if [[ $OBJECTSTORE_TLS == *"false"* ]]; then
           export URI_PREFIX=http
         fi
-        export S3_ENDPOINT=${URI_PREFIX}://${OBJECTSTORE_HOST}:${OBJECTSTORE_PORT}
+
+        S3_ENDPOINT="${URI_PREFIX}://${OBJECTSTORE_HOST}"
+        if [[ -n "${OBJECTSTORE_PORT}" ]] && [[ "${OBJECTSTORE_PORT}" != "null" ]]; then
+          S3_ENDPOINT="${S3_ENDPOINT}:${OBJECTSTORE_PORT}"
+        fi
+        export S3_ENDPOINT
       fi
       # always add the openshift service-ca.crt if it exists
       if [ -a /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt ]; then
@@ -362,7 +369,7 @@ objects:
       hive.metastore.authentication.type=NONE
       hive.metastore.uri=thrift://hive-metastore:8000
       hive.parquet.use-column-names=true
-      hive.s3.path-style-access=true      
+      hive.s3.path-style-access=true
       hive.s3.sse.enabled=true
       hive.storage-format=Parquet
     blackhole.propeties: |
@@ -388,7 +395,7 @@ objects:
       webServices:
         public:
           enabled: true
-        metrics: 
+        metrics:
           enabled: true
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG}
@@ -504,7 +511,7 @@ objects:
       webServices:
         public:
           enabled: true
-        metrics: 
+        metrics:
           enabled: true
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG}
