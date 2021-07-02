@@ -13,7 +13,7 @@ objects:
 - apiVersion: v1
   kind: ConfigMap
   metadata:
-    name: presto-common-config
+    name: presto-clowder-common-config
   data:
     initialize_presto.sh: |
       #!/bin/bash
@@ -148,7 +148,7 @@ objects:
 - apiVersion: v1
   kind: ConfigMap
   metadata:
-    name: presto-coordinator-config
+    name: presto-clowder-coordinator-config
     labels:
       app: presto
   data:
@@ -211,7 +211,7 @@ objects:
 - apiVersion: v1
   kind: ConfigMap
   metadata:
-    name: presto-jmx-config
+    name: presto-clowder-jmx-config
     labels:
       app: presto
   data:
@@ -292,7 +292,7 @@ objects:
 - apiVersion: v1
   kind: ConfigMap
   metadata:
-    name: presto-worker-config
+    name: presto-clowder-worker-config
     labels:
       app: presto
   data:
@@ -354,7 +354,7 @@ objects:
 - apiVersion: v1
   kind: ConfigMap
   metadata:
-    name: presto-catalog-config
+    name: presto-clowder-catalog-config
     labels:
       app: presto
   data:
@@ -465,19 +465,19 @@ objects:
         volumes:
           - name: presto-coordinator-config
             configMap:
-              name: presto-coordinator-config
+              name: presto-clowder-coordinator-config
               defaultMode: 420
           - name: presto-common-config
             configMap:
-              name: presto-common-config
+              name: presto-clowder-common-config
               defaultMode: 509
           - name: presto-catalog-config
             configMap:
-              name: presto-catalog-config
+              name: presto-clowder-catalog-config
               defaultMode: 420
           - name: presto-jmx-config
             configMap:
-              name: presto-jmx-config
+              name: presto-clowder-jmx-config
               defaultMode: 420
           - name: presto-etc
             emptyDir: {}
@@ -487,7 +487,7 @@ objects:
             emptyDir: {}
           - name: hadoop-config
             configMap:
-              name: hadoop-config
+              name: hadoop-clowder-config
               defaultMode: 420
         volumeMounts:
           - name: presto-etc
@@ -581,19 +581,19 @@ objects:
         volumes:
           - name: presto-worker-config
             configMap:
-              name: presto-worker-config
+              name: presto-clowder-worker-config
               defaultMode: 420
           - name: presto-common-config
             configMap:
-              name: presto-common-config
+              name: presto-clowder-common-config
               defaultMode: 509
           - name: presto-catalog-config
             configMap:
-              name: presto-catalog-config
+              name: presto-clowder-catalog-config
               defaultMode: 420
           - name: presto-jmx-config
             configMap:
-              name: presto-jmx-config
+              name: presto-clowder-jmx-config
               defaultMode: 420
           - name: presto-etc
             emptyDir: {}
@@ -603,7 +603,7 @@ objects:
             emptyDir: {}
           - name: hadoop-config
             configMap:
-              name: hadoop-config
+              name: hadoop-clowder-config
               defaultMode: 420
         volumeMounts:
           - name: presto-etc
@@ -625,7 +625,7 @@ objects:
     objectStore:
     - ${S3_BUCKET_NAME}
     database:
-      sharedDbAppName: ${SHARED_DB_APP_NAME}
+      sharedDbAppName: koku
     dependencies:
       - koku
 
@@ -705,8 +705,6 @@ parameters:
   name: QUERY_MAX_TOTAL_MEMORY_PER_NODE
   value: '2GB'
   required: true
-- name: SHARED_DB_APP_NAME
-  value: 'koku'
 - name: ENV_NAME
   required: false
 - name: S3_BUCKET_NAME
