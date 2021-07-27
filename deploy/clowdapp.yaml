@@ -374,9 +374,9 @@ objects:
           failureThreshold: 3
           timeoutSeconds: 5
         volumes:
-          - name: trino-cfg-vol
+          - name: presto-config-volume
             configMap:
-              name: trino-config
+              name: presto-clowder-config
 
           - name: presto-coordinator-config
             configMap:
@@ -405,6 +405,9 @@ objects:
               name: hadoop-clowder-config
               defaultMode: 420
         volumeMounts:
+          - name: trino-cfg-vol
+            mountPath: /etc/trino/jvm.config
+            subPath: jvm.config
           - name: presto-etc
             mountPath: /opt/presto/presto-server/etc
           - name: presto-coordinator-config
