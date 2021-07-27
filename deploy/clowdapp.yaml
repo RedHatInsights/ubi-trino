@@ -13,7 +13,9 @@ objects:
 - apiVersion: v1
   kind: ConfigMap
   metadata:
-    name: presto-clowder-common-config
+    name: presto-clowder-config
+    labels:
+      app: presto
   data:
     initialize_presto.sh: |
       #!/bin/bash
@@ -145,78 +147,6 @@ objects:
           fi
       fi
       exec "$@"
-- apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    name: presto-clowder-coordinator-config
-    labels:
-      app: presto
-  data:
-    config.properties: |
-      coordinator=true
-      node-scheduler.include-coordinator=true
-      discovery-server.enabled=true
-      http-server.http.port=8000
-      discovery.uri=http://presto-coordinator:8000
-      jmx.rmiserver.port=8081
-      jmx.rmiregistry.port=8081
-      query.max-length=10000000
-      web-ui.authentication.type=fixed
-      web-ui.user=presto
-    jvm.config: >-
-      -server
-
-      -XX:+UseContainerSupport
-
-      -XX:+UseG1GC
-
-      -XX:+UseGCOverheadLimit
-
-      -XX:InitialRAMPercentage=50.0
-
-      -XX:MaxRAMPercentage=75.0
-
-      -XX:+ExplicitGCInvokesConcurrent
-
-      -XX:+HeapDumpOnOutOfMemoryError
-
-      -XX:HeapDumpPath=/var/presto/logs/heap_dump.bin
-
-      -XX:+ExitOnOutOfMemoryError
-
-      -XX:ErrorFile=/var/presto/logs/java_error%p.log
-
-      -verbose:gc
-
-      -Xlog:gc*:/var/presto/logs/gc.log
-
-      -javaagent:/opt/jmx_exporter/jmx_exporter.jar=9000:/opt/jmx_exporter/config/config.yml
-
-      -Dcom.sun.management.jmxremote
-
-      -Dcom.sun.management.jmxremote.local.only=false
-
-      -Dcom.sun.management.jmxremote.ssl=false
-
-      -Dcom.sun.management.jmxremote.authenticate=false
-
-      -Dcom.sun.management.jmxremote.port=8081
-
-      -Dcom.sun.management.jmxremote.rmi.port=8081
-
-      -Djava.rmi.server.hostname=127.0.0.1
-    log.properties: |
-      com.facebook.presto=INFO
-    node.properties: |
-      node.data-dir=/var/presto/data
-      node.environment=production
-- apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    name: presto-clowder-jmx-config
-    labels:
-      app: presto
-  data:
     config.yml: |-
       ---
       lowercaseOutputName: true
@@ -291,14 +221,40 @@ objects:
         - pattern: 'presto.failuredetector<name=HeartbeatFailureDetector><>ActiveCount: (.*)'
           name: 'presto_heartbeatdetector_activecount'
           type: GAUGE
-- apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    name: presto-clowder-worker-config
-    labels:
-      app: presto
-  data:
-    config.properties: |
+    jvm.config: |-
+      -server
+      -XX:+UseContainerSupport
+      -XX:+UseG1GC
+      -XX:+UseGCOverheadLimit
+      -XX:InitialRAMPercentage=50.0
+      -XX:MaxRAMPercentage=75.0
+      -XX:+ExplicitGCInvokesConcurrent
+      -XX:+HeapDumpOnOutOfMemoryError
+      -XX:HeapDumpPath=/var/presto/logs/heap_dump.bin
+      -XX:+ExitOnOutOfMemoryError
+      -XX:ErrorFile=/var/presto/logs/java_error%p.log
+      -verbose:gc
+      -Xlog:gc*:/var/presto/logs/gc.log
+      -javaagent:/opt/jmx_exporter/jmx_exporter.jar=9000:/opt/jmx_exporter/config/config.yml
+      -Dcom.sun.management.jmxremote
+      -Dcom.sun.management.jmxremote.local.only=false
+      -Dcom.sun.management.jmxremote.ssl=false
+      -Dcom.sun.management.jmxremote.authenticate=false
+      -Dcom.sun.management.jmxremote.port=8081
+      -Dcom.sun.management.jmxremote.rmi.port=8081
+      -Djava.rmi.server.hostname=127.0.0.1
+    config.properties.coordinator: |-
+      coordinator=true
+      node-scheduler.include-coordinator=true
+      discovery-server.enabled=true
+      http-server.http.port=8000
+      discovery.uri=http://presto-coordinator:8000
+      jmx.rmiserver.port=8081
+      jmx.rmiregistry.port=8081
+      query.max-length=10000000
+      web-ui.authentication.type=fixed
+      web-ui.user=presto
+    config.properties.worker: |-
       coordinator=false
       node-scheduler.include-coordinator=true
       http-server.http.port=8000
@@ -306,61 +262,12 @@ objects:
       jmx.rmiserver.port=8081
       jmx.rmiregistry.port=8081
       query.max-length=10000000
-    jvm.config: >-
-      -server
-
-      -XX:+UseContainerSupport
-
-      -XX:+UseG1GC
-
-      -XX:+UseGCOverheadLimit
-
-      -XX:InitialRAMPercentage=50.0
-
-      -XX:MaxRAMPercentage=75.0
-
-      -XX:+ExplicitGCInvokesConcurrent
-
-      -XX:+HeapDumpOnOutOfMemoryError
-
-      -XX:HeapDumpPath=/var/presto/logs/heap_dump.bin
-
-      -XX:+ExitOnOutOfMemoryError
-
-      -XX:ErrorFile=/var/presto/logs/java_error%p.log
-
-      -verbose:gc
-
-      -Xlog:gc*:/var/presto/logs/gc.log
-
-      -javaagent:/opt/jmx_exporter/jmx_exporter.jar=9000:/opt/jmx_exporter/config/config.yml
-
-      -Dcom.sun.management.jmxremote
-
-      -Dcom.sun.management.jmxremote.local.only=false
-
-      -Dcom.sun.management.jmxremote.ssl=false
-
-      -Dcom.sun.management.jmxremote.authenticate=false
-
-      -Dcom.sun.management.jmxremote.port=8081
-
-      -Dcom.sun.management.jmxremote.rmi.port=8081
-
-      -Djava.rmi.server.hostname=127.0.0.1
-    log.properties: |
+    log.properties: |-
       com.facebook.presto=INFO
     node.properties: |
       node.data-dir=/var/presto/data
       node.environment=production
-- apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    name: presto-clowder-catalog-config
-    labels:
-      app: presto
-  data:
-    hive.properties: |
+    hive.properties: |-
       connector.name=hive-hadoop2
       hive.allow-drop-table=true
       hive.allow-rename-table=true
@@ -374,16 +281,18 @@ objects:
       hive.s3.path-style-access=true
       hive.s3.sse.enabled=true
       hive.storage-format=Parquet
-    blackhole.propeties: |
+    blackhole.propeties: |-
       connector.name=blackhole
-    jmx.properties: |
+    jmx.properties: |-
       connector.name=jmx
-    memory.properties: |
+    memory.properties: |-
       connector.name=memory
-    tpcds.properties: |
+    tpcds.properties: |-
       connector.name=tpcds
-    tpch.properties: |
+    tpch.properties: |-
       connector.name=tpch
+
+
 
 - apiVersion: cloud.redhat.com/v1alpha1
   kind: ClowdApp
@@ -465,6 +374,10 @@ objects:
           failureThreshold: 3
           timeoutSeconds: 5
         volumes:
+          - name: trino-cfg-vol
+            configMap:
+              name: trino-config
+
           - name: presto-coordinator-config
             configMap:
               name: presto-clowder-coordinator-config
@@ -690,7 +603,7 @@ parameters:
 - description: Image tag
   displayName: Image tag
   name: IMAGE_TAG
-  value: '348-001'
+  value: '348-002'
   required: true
 - description: Max Memory for a query
   displayName: query.max-memory
