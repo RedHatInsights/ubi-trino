@@ -40,7 +40,6 @@ objects:
       fi
       echo "Copy config files to ${TRINO_HOME}/"
       cp -v -L -r -f /etc/trino-init/* ${TRINO_HOME}/
-      cp -v -L -r -f /etc/trino-hadoop-config/* ${TRINO_HOME}/
       if [ ! -f ${TRINO_HOME}/catalog/postgres.properties ]; then
         echo "Creating trino connector configuration..."
         echo "connector.name=postgresql" >> ${TRINO_HOME}/catalog/postgres.properties
