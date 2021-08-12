@@ -394,9 +394,9 @@ objects:
               name: hadoop-clowder-config
               defaultMode: 420
         volumeMounts:
-          - name: trino-cfg-vol
+          - name: trino-config
             mountPath: /etc/trino
-          - name: trino-cfg-cat
+          - name: trino-config-catalog
             mountPath: /etc/trino/catalog
           - name: trino-data
             mountPath: /data/trino
@@ -494,9 +494,9 @@ objects:
               name: hadoop-clowder-config
               defaultMode: 420
         volumeMounts:
-          - name: trino-cfg-vol
+          - name: trino-config
             mountPath: /etc/trino
-          - name: trino-cfg-cat
+          - name: trino-config-catalog
             mountPath: /etc/trino/catalog
           - name: trino-data
             mountPath: /data/trino
