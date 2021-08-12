@@ -68,7 +68,7 @@ COPY --chown=trino:trino default/etc $TRINO_HOME
 # https://docs.oracle.com/javase/7/docs/technotes/guides/net/properties.html
 # Java caches dns results forever, don't cache dns results forever:
 RUN touch $JAVA_HOME/lib/security/java.security \
-    && chown 1003:0 $JAVA_HOME/lib/security/java.security \
+    && chown 1000:0 $JAVA_HOME/lib/security/java.security \
     && chmod g+rw $JAVA_HOME/lib/security/java.security
 RUN sed -i '/networkaddress.cache.ttl/d' $JAVA_HOME/lib/security/java.security
 RUN sed -i '/networkaddress.cache.negative.ttl/d' $JAVA_HOME/lib/security/java.security
