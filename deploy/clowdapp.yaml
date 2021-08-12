@@ -329,6 +329,8 @@ objects:
         args:
           - /usr/lib/trino/bin/launcher
           - run
+          - --etc-dir
+          - /etc/trino
         env:
           - name: MY_NODE_ID
             valueFrom:
@@ -442,6 +444,8 @@ objects:
         args:
           - /usr/lib/trino/bin/launcher
           - run
+          - --etc-dir
+          - /etc/trino
         env:
           - name: MY_NODE_ID
             valueFrom:
