@@ -373,7 +373,7 @@ objects:
           failureThreshold: 3
           tcpSocket:
             port: 8000
-          initialDelaySeconds: 120
+          initialDelaySeconds: 60
           periodSeconds: 10
           successThreshold: 1
           timeoutSeconds: 5
@@ -382,7 +382,7 @@ objects:
             path: /ui/
             port: 8000
             scheme: HTTP
-          initialDelaySeconds: 120
+          initialDelaySeconds: 60
           periodSeconds: 10
           successThreshold: 1
           failureThreshold: 3
@@ -487,7 +487,7 @@ objects:
           failureThreshold: 3
           tcpSocket:
             port: 8000
-          initialDelaySeconds: 120
+          initialDelaySeconds: 60
           periodSeconds: 10
           successThreshold: 1
           timeoutSeconds: 3
@@ -496,7 +496,7 @@ objects:
             path: /
             port: 9000
             scheme: HTTP
-          initialDelaySeconds: 120
+          initialDelaySeconds: 60
           periodSeconds: 10
           successThreshold: 1
           failureThreshold: 3
