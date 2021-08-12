@@ -1,23 +1,23 @@
 apiVersion: v1
 kind: Template
 metadata:
-  name: trino-template
+  name: presto-template
   annotations:
-    openshift.io/display-name: "Trino"
-    openshift.io/long-description: "This template defines resources needed to deploy and run the Trino."
+    openshift.io/display-name: "Presto"
+    openshift.io/long-description: "This template defines resources needed to deploy and run the Presto."
     openshift.io/provider-display-name: "Red Hat, Inc."
 labels:
-  app: trino
-  template: trino
+  app: presto
+  template: presto
 objects:
 - apiVersion: v1
   kind: ConfigMap
   metadata:
-    name: trino-config
+    name: presto-clowder-config
     labels:
-      app: trino
+      app: presto
   data:
-    initialize_trino.sh: |
+    initialize_presto.sh: |
       #!/bin/bash
       set -e
       if [[ ! -z "${ACG_CONFIG}" ]]; then
@@ -38,15 +38,15 @@ objects:
           export PGSSLROOTCERT=$temp_file
         fi
       fi
-      echo "Copy config files to ${TRINO_HOME}/"
-      cp -v -L -r -f /trino-etc/* ${TRINO_HOME}/
-      if [ ! -f ${TRINO_HOME}/catalog/postgres.properties ]; then
-        echo "Creating trino connector configuration..."
-        echo "connector.name=postgresql" >> ${TRINO_HOME}/catalog/postgres.properties
-        echo "connection-url=jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}" >> ${TRINO_HOME}/catalog/postgres.properties
-        echo "connection-user=${DATABASE_USER}" >> ${TRINO_HOME}/catalog/postgres.properties
-        echo "connection-password=${DATABASE_PASSWORD}" >> ${TRINO_HOME}/catalog/postgres.properties
-        echo "postgresql.array-mapping=AS_ARRAY" >> ${TRINO_HOME}/catalog/postgres.properties
+      echo "Copy config files to /opt/presto/presto-server/etc/"
+      cp -v -L -r -f /presto-etc/* /opt/presto/presto-server/etc/
+      if [ ! -f /opt/presto/presto-server/etc/catalog/postgres.properties ]; then
+        echo "Creating presto connector configuration..."
+        echo "connector.name=postgresql" >> /opt/presto/presto-server/etc/catalog/postgres.properties
+        echo "connection-url=jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}" >> /opt/presto/presto-server/etc/catalog/postgres.properties
+        echo "connection-user=${DATABASE_USER}" >> /opt/presto/presto-server/etc/catalog/postgres.properties
+        echo "connection-password=${DATABASE_PASSWORD}" >> /opt/presto/presto-server/etc/catalog/postgres.properties
+        echo "postgresql.array-mapping=AS_ARRAY" >> /opt/presto/presto-server/etc/catalog/postgres.properties
       fi
     entrypoint.sh: |
       #!/bin/bash
@@ -95,7 +95,7 @@ objects:
         importCert /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt changeit $JAVA_HOME/lib/security/cacerts
       fi
       # add node id to node config
-      NODE_CONFIG="${TRINO_HOME}/node.properties"
+      NODE_CONFIG="${PRESTO_HOME}/etc/node.properties"
       # ensure there's a newline between the last item in the config and what we add
       echo "" >> $NODE_CONFIG
       if ! grep -q -F 'node.id' "$NODE_CONFIG"; then
@@ -104,13 +104,13 @@ objects:
         echo "$NODE_ID" >> "$NODE_CONFIG"
       fi
       CORE_SITE=/hadoop-config/core-site.xml
-      mkdir -p ${TRINO_HOME}/hadoop-config
+      mkdir -p ${PRESTO_HOME}/etc/hadoop
       if [[ -f ${CORE_SITE} ]]; then
         echo "Configuring core-site.xml"
-        cat ${CORE_SITE} | sed "s#XXX_S3ENDPOINT_XXX#${S3_BUCKET_NAME}/${S3_DATA_DIR}#" > ${TRINO_HOME}/hadoop-config/core-site.xml
+        cat ${CORE_SITE} | sed "s#XXX_S3ENDPOINT_XXX#${S3_BUCKET_NAME}/${S3_DATA_DIR}#" > ${PRESTO_HOME}/etc/hadoop/core-site.xml
       fi
       # add AWS creds to hive catalog properties
-      HIVE_CATALOG_CONFIG="${TRINO_HOME}/catalog/hive.properties"
+      HIVE_CATALOG_CONFIG="${PRESTO_HOME}/etc/catalog/hive.properties"
       # ensure there's a newline between the last item in the config and what we add
       echo "" >> $HIVE_CATALOG_CONFIG
       if ! grep -q -F 'hive.s3.aws-access-key' "$HIVE_CATALOG_CONFIG"; then
@@ -120,17 +120,26 @@ objects:
         echo "hive.s3.endpoint=$S3_ENDPOINT" >> "$HIVE_CATALOG_CONFIG"
         echo "hive.s3.ssl.enabled=$OBJECTSTORE_TLS" >> "$HIVE_CATALOG_CONFIG"
       fi
-
+      # add max memory config to config.properties
+      CONFIG="${PRESTO_HOME}/etc/config.properties"
+      # ensure there's a newline between the last item in the config and what we add
+      echo "" >> $CONFIG
+      if ! grep -q -F 'query.max-memory-per-node' "$CONFIG"; then
+        echo "Adding query.max-memory, query.max-memory-per-node, and query.max-total-memory-per-node to $CONFIG"
+        echo "query.max-memory=$QUERY_MAX_MEMORY" >> "$CONFIG"
+        echo "query.max-memory-per-node=$QUERY_MAX_MEMORY_PER_NODE" >> "$CONFIG"
+        echo "query.max-total-memory-per-node=$QUERY_MAX_TOTAL_MEMORY_PER_NODE" >> "$CONFIG"
+      fi
       # add UID to /etc/passwd if missing
       if ! whoami &> /dev/null; then
           if test -w /etc/passwd || stat -c "%a" /etc/passwd | grep -qE '.[267].'; then
-              echo "Adding user ${USER_NAME:-trino} with current UID $(id -u) to /etc/passwd"
+              echo "Adding user ${USER_NAME:-presto} with current UID $(id -u) to /etc/passwd"
               # Remove existing entry with user first.
               # cannot use sed -i because we do not have permission to write new
               # files into /etc
-              sed  "/${USER_NAME:-trino}:x/d" /etc/passwd > /tmp/passwd
+              sed  "/${USER_NAME:-presto}:x/d" /etc/passwd > /tmp/passwd
               # add our user with our current user ID into passwd
-              echo "${USER_NAME:-trino}:x:$(id -u):0:${USER_NAME:-trino} user:${HOME}:/sbin/nologin" >> /tmp/passwd
+              echo "${USER_NAME:-presto}:x:$(id -u):0:${USER_NAME:-presto} user:${HOME}:/sbin/nologin" >> /tmp/passwd
               # overwrite existing contents with new contents (cannot replace the
               # file due to permissions)
               cat /tmp/passwd > /etc/passwd
@@ -138,147 +147,133 @@ objects:
           fi
       fi
       exec "$@"
-    jvm.config: |-
-      -server
-      -Xmx16G
-      -XX:+UseContainerSupport
-      -XX:-UseBiasedLocking
-      -XX:+UseG1GC
-      -XX:G1HeapRegionSize=32M
-      -XX:+ExplicitGCInvokesConcurrent
-      -XX:+ExitOnOutOfMemoryError
-      -XX:ErrorFile=/data/trino/logs/java_error%p.log
-      -XX:+HeapDumpOnOutOfMemoryError
-      -XX:HeapDumpPath=/data/trino/logs/heap_dump.bin
-      -XX:-OmitStackTraceInFastThrow
-      -XX:ReservedCodeCacheSize=512M
-      -XX:PerMethodRecompilationCutoff=10000
-      -XX:PerBytecodeRecompilationCutoff=10000
-      -Djdk.attach.allowAttachSelf=true
-      -Djdk.nio.maxCachedBufferSize=2000000
-      -verbose:gc
-      -Xlog:gc*:/data/trino/logs/gc.log
-      -javaagent:/usr/lib/trino/jmx_exporter.jar=9000:/etc/trino/catalog/config.yaml
-      -Dcom.sun.management.jmxremote
-      -Dcom.sun.management.jmxremote.local.only=false
-      -Dcom.sun.management.jmxremote.ssl=false
-      -Dcom.sun.management.jmxremote.authenticate=false
-      -Dcom.sun.management.jmxremote.port=10000
-      -Dcom.sun.management.jmxremote.rmi.port=10000
-      -Djava.rmi.server.hostname=127.0.0.1
-    config.properties.coordinator: |-
-      coordinator=true
-      node-scheduler.include-coordinator=true
-      http-server.http.port=8000
-      discovery-server.enabled=true
-      discovery.uri=http://trino-coordinator:8000
-      query.max-length=10000000
-      query.max-memory=${QUERY_MAX_MEMORY}
-      query.max-memory-per-node=${QUERY_MAX_MEMORY_PER_NODE}
-      query.max-total-memory-per-node=${QUERY_MAX_TOTAL_MEMORY_PER_NODE}
-      web-ui.authentication.type=fixed
-      web-ui.user=trino
-    config.properties.worker: |-
-      coordinator=false
-      node-scheduler.include-coordinator=true
-      http-server.http.port=8000
-      discovery.uri=http://trino-coordinator:8000
-      query.max-length=10000000
-      query.max-memory=${QUERY_MAX_MEMORY}
-      query.max-memory-per-node=${QUERY_MAX_MEMORY_PER_NODE}
-      query.max-total-memory-per-node=${QUERY_MAX_TOTAL_MEMORY_PER_NODE}
-    # log.properties: |-
-    #   com.facebook.trino=INFO
-    node.properties: |-
-      node.data-dir=/data/trino
-      node.environment=${ENV_NAME}
-- apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    name: trino-config-catalog
-    labels:
-      app: trino
-    config.yaml: |-
+    config.yml: |-
       ---
       lowercaseOutputName: true
       lowercaseOutputLabelNames: true
       attrNameSnakeCase: false
       rules:
         # capture percentile and set quantile label
-        - pattern: 'trino.plugin.hive<type=(.+), name=hive><>(.+AllTime).P(\d+): (.*)'
-          name: 'trino_hive_$1_$2_seconds'
+        - pattern: 'presto.plugin.hive<type=(.+), name=hive><>(.+AllTime).P(\d+): (.*)'
+          name: 'presto_hive_$1_$2_seconds'
           type: GAUGE
           valueFactor: 0.001
           labels:
             quantile: '0.$3'
         # match non-percentiles
-        - pattern: 'trino.plugin.hive<type=(.+), name=hive><>(.+AllTime.+): (.*)'
-          name: 'trino_hive_$1_$2_seconds'
+        - pattern: 'presto.plugin.hive<type=(.+), name=hive><>(.+AllTime.+): (.*)'
+          name: 'presto_hive_$1_$2_seconds'
           type: GAUGE
           valueFactor: 0.001
           # counts
-        - pattern: 'trino.plugin.hive<type=(.+), name=hive><>(.+TotalCount.*): (.*)'
-          name: 'trino_hive_$1_$2_total'
+        - pattern: 'presto.plugin.hive<type=(.+), name=hive><>(.+TotalCount.*): (.*)'
+          name: 'presto_hive_$1_$2_total'
           type: COUNTER
         # capture percentile and set quantile label
-        - pattern: 'trino.plugin.hive.s3<type=(.+), name=hive><>(.+AllTime).P(\d+): (.*)'
-          name: 'trino_hive_s3_$1_$2_seconds'
+        - pattern: 'presto.plugin.hive.s3<type=(.+), name=hive><>(.+AllTime).P(\d+): (.*)'
+          name: 'presto_hive_s3_$1_$2_seconds'
           type: GAUGE
           valueFactor: 0.001
           labels:
             quantile: '0.$3'
         # match non-percentiles
-        - pattern: 'trino.plugin.hive.s3<type=(.+), name=hive><>(.+AllTime.+): (.*)'
-          name: 'trino_hive_s3_$1_$2_seconds'
+        - pattern: 'presto.plugin.hive.s3<type=(.+), name=hive><>(.+AllTime.+): (.*)'
+          name: 'presto_hive_s3_$1_$2_seconds'
           type: GAUGE
           valueFactor: 0.001
           # counts
-        - pattern: 'trino.plugin.hive.s3<type=(.+), name=hive><>(.+TotalCount.*): (.*)'
-          name: 'trino_hive_s3_$1_$2_total'
+        - pattern: 'presto.plugin.hive.s3<type=(.+), name=hive><>(.+TotalCount.*): (.*)'
+          name: 'presto_hive_s3_$1_$2_total'
           type: COUNTER
         # capture percentile and set quantile label
-        - pattern: 'trino.plugin.hive.metastore.thrift<type=(.+), name=hive><>(.+AllTime).P(\d+): (.*)'
-          name: 'trino_hive_metastore_thrift_$1_$2_seconds'
+        - pattern: 'presto.plugin.hive.metastore.thrift<type=(.+), name=hive><>(.+AllTime).P(\d+): (.*)'
+          name: 'presto_hive_metastore_thrift_$1_$2_seconds'
           type: GAUGE
           valueFactor: 0.001
           labels:
             quantile: '0.$3'
         # match non-percentiles
-        - pattern: 'trino.plugin.hive.metastore.thrift<type=(.+), name=hive><>(.+AllTime.+): (.*)'
-          name: 'trino_hive_metastore_thrift_$1_$2_count_seconds'
+        - pattern: 'presto.plugin.hive.metastore.thrift<type=(.+), name=hive><>(.+AllTime.+): (.*)'
+          name: 'presto_hive_metastore_thrift_$1_$2_count_seconds'
           type: GAUGE
           valueFactor: 0.001
         # counts
-        - pattern: 'trino.plugin.hive.metastore.thrift<type=(.+), name=hive><>(.+TotalCount.*): (.*)'
-          name: 'trino_hive_metastore_thrift_$1_$2_total'
+        - pattern: 'presto.plugin.hive.metastore.thrift<type=(.+), name=hive><>(.+TotalCount.*): (.*)'
+          name: 'presto_hive_metastore_thrift_$1_$2_total'
           type: COUNTER
-        - pattern: 'trino.execution<name=(.+)><>(.+AllTime).P(\d+): (.*)'
-          name: 'trino_execution_$1_$2_seconds'
+        - pattern: 'presto.execution<name=(.+)><>(.+AllTime).P(\d+): (.*)'
+          name: 'presto_execution_$1_$2_seconds'
           type: GAUGE
           valueFactor: 0.001
           labels:
             quantile: '0.$3'
-        - pattern: 'trino.execution<name=(.+)><>(.+AllTime.+): (.*)'
-          name: 'trino_execution_$1_$2_seconds'
+        - pattern: 'presto.execution<name=(.+)><>(.+AllTime.+): (.*)'
+          name: 'presto_execution_$1_$2_seconds'
           type: GAUGE
           valueFactor: 0.001
         # counts
-        - pattern: 'trino.execution<name=(.+)><>(.+TotalCount.*): (.*)'
-          name: 'trino_execution_$1_$2_total'
+        - pattern: 'presto.execution<name=(.+)><>(.+TotalCount.*): (.*)'
+          name: 'presto_execution_$1_$2_total'
           type: COUNTER
-        - pattern: 'trino.memory<type=(.*), name=(.*)><>(.+): (.*)'
-          name: 'trino_memory_$1_$2_$3'
+        - pattern: 'presto.memory<type=(.*), name=(.*)><>(.+): (.*)'
+          name: 'presto_memory_$1_$2_$3'
           type: GAUGE
-        - pattern: 'trino.failuredetector<name=HeartbeatFailureDetector><>ActiveCount: (.*)'
-          name: 'trino_heartbeatdetector_activecount'
+        - pattern: 'presto.failuredetector<name=HeartbeatFailureDetector><>ActiveCount: (.*)'
+          name: 'presto_heartbeatdetector_activecount'
           type: GAUGE
+    jvm.config: |-
+      -server
+      -XX:+UseContainerSupport
+      -XX:+UseG1GC
+      -XX:+UseGCOverheadLimit
+      -XX:InitialRAMPercentage=50.0
+      -XX:MaxRAMPercentage=75.0
+      -XX:+ExplicitGCInvokesConcurrent
+      -XX:+HeapDumpOnOutOfMemoryError
+      -XX:HeapDumpPath=/var/presto/logs/heap_dump.bin
+      -XX:+ExitOnOutOfMemoryError
+      -XX:ErrorFile=/var/presto/logs/java_error%p.log
+      -verbose:gc
+      -Xlog:gc*:/var/presto/logs/gc.log
+      -javaagent:/opt/jmx_exporter/jmx_exporter.jar=9000:/opt/jmx_exporter/config/config.yml
+      -Dcom.sun.management.jmxremote
+      -Dcom.sun.management.jmxremote.local.only=false
+      -Dcom.sun.management.jmxremote.ssl=false
+      -Dcom.sun.management.jmxremote.authenticate=false
+      -Dcom.sun.management.jmxremote.port=8081
+      -Dcom.sun.management.jmxremote.rmi.port=8081
+      -Djava.rmi.server.hostname=127.0.0.1
+    config.properties.coordinator: |-
+      coordinator=true
+      node-scheduler.include-coordinator=true
+      discovery-server.enabled=true
+      http-server.http.port=8000
+      discovery.uri=http://presto-coordinator:8000
+      jmx.rmiserver.port=8081
+      jmx.rmiregistry.port=8081
+      query.max-length=10000000
+      web-ui.authentication.type=fixed
+      web-ui.user=presto
+    config.properties.worker: |-
+      coordinator=false
+      node-scheduler.include-coordinator=true
+      http-server.http.port=8000
+      discovery.uri=http://presto-coordinator:8000
+      jmx.rmiserver.port=8081
+      jmx.rmiregistry.port=8081
+      query.max-length=10000000
+    log.properties: |-
+      com.facebook.presto=INFO
+    node.properties: |
+      node.data-dir=/var/presto/data
+      node.environment=production
     hive.properties: |-
       connector.name=hive-hadoop2
       hive.allow-drop-table=true
       hive.allow-rename-table=true
       hive.collect-column-statistics-on-write=true
       hive.compression-codec=SNAPPY
-      hive.config.resources=/etc/trino/hadoop-config/core-site.xml
+      hive.config.resources=/opt/presto/presto-server/etc/hadoop/core-site.xml
       hive.hdfs.authentication.type=NONE
       hive.metastore.authentication.type=NONE
       hive.metastore.uri=thrift://hive-metastore:8000
@@ -297,10 +292,12 @@ objects:
     tpch.properties: |-
       connector.name=tpch
 
+
+
 - apiVersion: cloud.redhat.com/v1alpha1
   kind: ClowdApp
   metadata:
-    name: trino
+    name: presto
   spec:
     envName: ${ENV_NAME}
     deployments:
@@ -315,12 +312,12 @@ objects:
         image: ${IMAGE}:${IMAGE_TAG}
         initContainers:
           - command:
-              - /trino-common/initialize_trino.sh
+              - /presto-common/initialize_presto.sh
             inheritEnv: true
         command:
-          - /trino-common/entrypoint.sh
+          - /presto-common/entrypoint.sh
         args:
-          - /opt/trino/trino-server/bin/launcher
+          - /opt/presto/presto-server/bin/launcher
           - run
         env:
           - name: MY_NODE_ID
@@ -377,17 +374,31 @@ objects:
           failureThreshold: 3
           timeoutSeconds: 5
         volumes:
-          - name: trino-config
+          - name: presto-config-volume
             configMap:
-              name: trino-config
-          - name: trino-config-catalog
+              name: presto-clowder-config
+
+          - name: presto-coordinator-config
             configMap:
-              name: trino-config-catalog
-          - name: trino-etc
+              name: presto-clowder-coordinator-config
+              defaultMode: 420
+          - name: presto-common-config
+            configMap:
+              name: presto-clowder-common-config
+              defaultMode: 509
+          - name: presto-catalog-config
+            configMap:
+              name: presto-clowder-catalog-config
+              defaultMode: 420
+          - name: presto-jmx-config
+            configMap:
+              name: presto-clowder-jmx-config
+              defaultMode: 420
+          - name: presto-etc
             emptyDir: {}
-          - name: trino-data
+          - name: presto-data
             emptyDir: {}
-          - name: trino-logs
+          - name: presto-logs
             emptyDir: {}
           - name: hadoop-config
             configMap:
@@ -395,15 +406,24 @@ objects:
               defaultMode: 420
         volumeMounts:
           - name: trino-cfg-vol
-            mountPath: /etc/trino
-          - name: trino-cfg-cat
-            mountPath: /etc/trino/catalog
-          - name: trino-data
-            mountPath: /data/trino
-          - name: trino-logs
-            mountPath: /data/trino/logs
+            mountPath: /etc/trino/jvm.config
+            subPath: jvm.config
+          - name: presto-etc
+            mountPath: /opt/presto/presto-server/etc
+          - name: presto-coordinator-config
+            mountPath: /presto-etc
+          - name: presto-common-config
+            mountPath: /presto-common
+          - name: presto-jmx-config
+            mountPath: /opt/jmx_exporter/config
+          - name: presto-catalog-config
+            mountPath: /presto-etc/catalog
+          - name: presto-data
+            mountPath: /var/presto/data
+          - name: presto-logs
+            mountPath: /var/presto/logs
           - name: hadoop-config
-            mountPath: /etc/trino/hadoop-config
+            mountPath: /hadoop-config
     - name: worker
       minReplicas: ${{WORKER_REPLICAS}}
       webServices:
@@ -415,12 +435,12 @@ objects:
         image: ${IMAGE}:${IMAGE_TAG}
         initContainers:
           - command:
-              - /trino-common/initialize_trino.sh
+              - /presto-common/initialize_presto.sh
             inheritEnv: true
         command:
-          - /trino-common/entrypoint.sh
+          - /presto-common/entrypoint.sh
         args:
-          - /opt/trino/trino-server/bin/launcher
+          - /opt/presto/presto-server/bin/launcher
           - run
         env:
           - name: MY_NODE_ID
@@ -477,33 +497,49 @@ objects:
           failureThreshold: 3
           timeoutSeconds: 3
         volumes:
-          - name: trino-config
+          - name: presto-worker-config
             configMap:
-              name: trino-config
-          - name: trino-config-catalog
+              name: presto-clowder-worker-config
+              defaultMode: 420
+          - name: presto-common-config
             configMap:
-              name: trino-config-catalog
-          - name: trino-etc
+              name: presto-clowder-common-config
+              defaultMode: 509
+          - name: presto-catalog-config
+            configMap:
+              name: presto-clowder-catalog-config
+              defaultMode: 420
+          - name: presto-jmx-config
+            configMap:
+              name: presto-clowder-jmx-config
+              defaultMode: 420
+          - name: presto-etc
             emptyDir: {}
-          - name: trino-data
+          - name: presto-data
             emptyDir: {}
-          - name: trino-logs
+          - name: presto-logs
             emptyDir: {}
           - name: hadoop-config
             configMap:
               name: hadoop-clowder-config
               defaultMode: 420
         volumeMounts:
-          - name: trino-cfg-vol
-            mountPath: /etc/trino
-          - name: trino-cfg-cat
-            mountPath: /etc/trino/catalog
-          - name: trino-data
-            mountPath: /data/trino
-          - name: trino-logs
-            mountPath: /data/trino/logs
+          - name: presto-etc
+            mountPath: /opt/presto/presto-server/etc
+          - name: presto-common-config
+            mountPath: /presto-common
+          - name: presto-catalog-config
+            mountPath: /presto-etc/catalog
+          - name: presto-jmx-config
+            mountPath: /opt/jmx_exporter/config
+          - name: presto-data
+            mountPath: /var/presto/data
+          - name: presto-logs
+            mountPath: /var/presto/logs
+          - name: presto-worker-config
+            mountPath: /presto-etc
           - name: hadoop-config
-            mountPath: /etc/trino/hadoop-config
+            mountPath: /hadoop-config
     objectStore:
     - ${S3_BUCKET_NAME}
     database:

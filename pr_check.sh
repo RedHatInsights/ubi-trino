@@ -15,19 +15,21 @@ APP="ubi-trino"
 IMAGE="${IMAGE_REPO}/${ORG}/${APP}"
 
 
-echo "LABEL quay.expires-after=3d" >> ./Dockerfile # tag expire in 3 days
-
 # Install bonfire repo/initialize
 CICD_URL=https://raw.githubusercontent.com/RedHatInsights/bonfire/master/cicd
 curl -s $CICD_URL/bootstrap.sh > .cicd_bootstrap.sh && source .cicd_bootstrap.sh
 
-source $CICD_ROOT/build.sh
-#source $CICD_ROOT/deploy_ephemeral_env.sh
-#source $CICD_ROOT/smoke_test.sh
+changed=$(git diff --name-only || egrep "default|bin|Dockerfile|image_build_num.txt")
+if [ -n "$changed" ]; then
 
-source $CICD_ROOT/_common_deploy_logic.sh
-export NAMESPACE=$(bonfire namespace reserve)
-oc process --local -f deploy/clowdapp.yaml | oc apply -f - -n $NAMESPACE
+    source $CICD_ROOT/build.sh
+    #source $CICD_ROOT/deploy_ephemeral_env.sh
+    #source $CICD_ROOT/smoke_test.sh
+
+    source $CICD_ROOT/_common_deploy_logic.sh
+    export NAMESPACE=$(bonfire namespace reserve)
+    oc process --local -f deploy/clowdapp.yaml | oc apply -f - -n $NAMESPACE
+fi
 
 mkdir -p $WORKSPACE/artifacts
 cat << EOF > ${WORKSPACE}/artifacts/junit-dummy.xml
