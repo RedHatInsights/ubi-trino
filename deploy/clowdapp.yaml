@@ -13,7 +13,7 @@ objects:
 - apiVersion: v1
   kind: ConfigMap
   metadata:
-    name: trino-config
+    name: trino-scripts
     labels:
       app: trino
   data:
@@ -138,6 +138,12 @@ objects:
           fi
       fi
       exec "$@"
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: trino-config
+    labels:
+      app: trino
     jvm.config: |-
       -server
       -Xmx16G
@@ -377,10 +383,17 @@ objects:
           failureThreshold: 3
           timeoutSeconds: 5
         volumes:
+          - name: trino-scripts
+            configMap:
+              name: trino-config
+              items:
+              - key: initialize_trino.sh
+                mode: 509
+              - key: entrypoint.sh
+                mode: 509
           - name: trino-config
             configMap:
               name: trino-config
-              defaultMode: 420
           - name: trino-config-catalog
             configMap:
               name: trino-config-catalog
@@ -393,8 +406,9 @@ objects:
           - name: hadoop-config
             configMap:
               name: hadoop-clowder-config
-              defaultMode: 420
         volumeMounts:
+          - name: trino-scripts
+            mountPath: /etc/trino
           - name: trino-config
             mountPath: /etc/trino
           - name: trino-config-catalog
@@ -478,10 +492,17 @@ objects:
           failureThreshold: 3
           timeoutSeconds: 3
         volumes:
+          - name: trino-scripts
+            configMap:
+              name: trino-config
+              items:
+              - key: initialize_trino.sh
+                mode: 509
+              - key: entrypoint.sh
+                mode: 509
           - name: trino-config
             configMap:
               name: trino-config
-              defaultMode: 420
           - name: trino-config-catalog
             configMap:
               name: trino-config-catalog
@@ -494,8 +515,9 @@ objects:
           - name: hadoop-config
             configMap:
               name: hadoop-clowder-config
-              defaultMode: 420
         volumeMounts:
+          - name: trino-scripts
+            mountPath: /etc/trino
           - name: trino-config
             mountPath: /etc/trino
           - name: trino-config-catalog
