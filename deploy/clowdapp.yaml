@@ -315,12 +315,12 @@ objects:
         image: ${IMAGE}:${IMAGE_TAG}
         initContainers:
           - command:
-              - /trino-common/initialize_trino.sh
+              - /etc/trino/initialize_trino.sh
             inheritEnv: true
         command:
-          - /trino-common/entrypoint.sh
+          - /etc/trino/entrypoint.sh
         args:
-          - /opt/trino/trino-server/bin/launcher
+          - /etc/trino/bin/launcher
           - run
         env:
           - name: MY_NODE_ID
@@ -415,12 +415,12 @@ objects:
         image: ${IMAGE}:${IMAGE_TAG}
         initContainers:
           - command:
-              - /trino-common/initialize_trino.sh
+              - /etc/trino/initialize_trino.sh
             inheritEnv: true
         command:
-          - /trino-common/entrypoint.sh
+          - /etc/trino/entrypoint.sh
         args:
-          - /opt/trino/trino-server/bin/launcher
+          - /etc/trino/bin/launcher
           - run
         env:
           - name: MY_NODE_ID
