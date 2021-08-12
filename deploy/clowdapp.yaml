@@ -179,7 +179,6 @@ objects:
       coordinator=true
       node-scheduler.include-coordinator=true
       http-server.http.port=8000
-      discovery-server.enabled=true
       discovery.uri=http://trino-coordinator:8000
       query.max-length=10000000
       query.max-memory=${QUERY_MAX_MEMORY}
@@ -196,8 +195,8 @@ objects:
       query.max-memory=${QUERY_MAX_MEMORY}
       query.max-memory-per-node=${QUERY_MAX_MEMORY_PER_NODE}
       query.max-total-memory-per-node=${QUERY_MAX_TOTAL_MEMORY_PER_NODE}
-    # log.properties: |-
-    #   com.facebook.trino=INFO
+    log.properties: |-
+      io.trino=INFO
     node.properties: |-
       node.data-dir=/data/trino/data
       node.environment=${NODE_ENV}
