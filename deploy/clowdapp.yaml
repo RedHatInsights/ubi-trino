@@ -329,7 +329,6 @@ objects:
           - /etc/trino/scripts/entrypoint.sh
         args:
           # - /usr/lib/trino/run-trino
-          - /bin/bash
           - sleep
           - infinity
         env:
