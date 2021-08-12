@@ -40,6 +40,7 @@ objects:
       fi
       echo "Copy config files to ${TRINO_HOME}/"
       cp -v -L -r -f /etc/trino-init/* ${TRINO_HOME}/
+      cp -v -L -r -f /etc/trino-hadoop-config/* ${TRINO_HOME}/
       if [ ! -f ${TRINO_HOME}/catalog/postgres.properties ]; then
         echo "Creating trino connector configuration..."
         echo "connector.name=postgresql" >> ${TRINO_HOME}/catalog/postgres.properties
@@ -200,13 +201,13 @@ objects:
     node.properties: |-
       node.data-dir=/data/trino/data
       node.environment=${ENV_NAME}
-- apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    name: trino-config-catalog
-    labels:
-      app: trino
-    config.yaml: |-
+# - apiVersion: v1
+#   kind: ConfigMap
+#   metadata:
+#     name: trino-config-catalog
+#     labels:
+#       app: trino
+    catalog/config.yaml: |-
       ---
       lowercaseOutputName: true
       lowercaseOutputLabelNames: true
@@ -280,7 +281,7 @@ objects:
         - pattern: 'trino.failuredetector<name=HeartbeatFailureDetector><>ActiveCount: (.*)'
           name: 'trino_heartbeatdetector_activecount'
           type: GAUGE
-    hive.properties: |-
+    catalog/hive.properties: |-
       connector.name=hive-hadoop2
       hive.allow-drop-table=true
       hive.allow-rename-table=true
@@ -294,15 +295,15 @@ objects:
       hive.s3.path-style-access=true
       hive.s3.sse.enabled=true
       hive.storage-format=Parquet
-    blackhole.propeties: |-
+    catalog/blackhole.propeties: |-
       connector.name=blackhole
-    jmx.properties: |-
+    catalog/jmx.properties: |-
       connector.name=jmx
-    memory.properties: |-
+    catalog/memory.properties: |-
       connector.name=memory
-    tpcds.properties: |-
+    catalog/tpcds.properties: |-
       connector.name=tpcds
-    tpch.properties: |-
+    catalog/tpch.properties: |-
       connector.name=tpch
 
 - apiVersion: cloud.redhat.com/v1alpha1
@@ -323,12 +324,14 @@ objects:
         image: ${IMAGE}:${IMAGE_TAG}
         initContainers:
           - command:
-              - /etc/trino/scripts/initialize_trino.sh
+              - /etc/trino-scripts/initialize_trino.sh
             inheritEnv: true
         command:
-          - /etc/trino/scripts/entrypoint.sh
+          - /etc/trino-scripts/entrypoint.sh
         args:
           # - /usr/lib/trino/run-trino
+          # - --config-dir=/etc/trino/config
+          # - --etc-dir=/etc/trino
           - sleep
           - infinity
         env:
@@ -399,9 +402,9 @@ objects:
           - name: trino-config
             configMap:
               name: trino-config
-          - name: trino-config-catalog
-            configMap:
-              name: trino-config-catalog
+          # - name: trino-config-catalog
+          #   configMap:
+          #     name: trino-config-catalog
           - name: trino-etc
             emptyDir: {}
           - name: trino-data
@@ -415,17 +418,17 @@ objects:
           - name: trino-etc
             mountPath: /etc/trino
           - name: trino-scripts
-            mountPath: /etc/trino/scripts
+            mountPath: /etc/trino-scripts
           - name: trino-config
             mountPath: /etc/trino-init
-          - name: trino-config-catalog
-            mountPath: /etc/trino-init/catalog
+          # - name: trino-config-catalog
+          #   mountPath: /etc/trino-init/catalog
           - name: trino-data
             mountPath: /data/trino/data
           - name: trino-logs
             mountPath: /data/trino/logs
           - name: hadoop-config
-            mountPath: /etc/trino-init/hadoop-config
+            mountPath: /etc/trino-hadoop-config
     - name: worker
       minReplicas: ${{WORKER_REPLICAS}}
       webServices:
@@ -437,12 +440,13 @@ objects:
         image: ${IMAGE}:${IMAGE_TAG}
         initContainers:
           - command:
-              - /etc/trino/scripts/initialize_trino.sh
+              - /etc/trino-scripts/initialize_trino.sh
             inheritEnv: true
         command:
-          - /etc/trino/scripts/entrypoint.sh
+          - /etc/trino-scripts/entrypoint.sh
         args:
           - /usr/lib/trino/run-trino
+          - --etc-dir=/etc/trino
         env:
           - name: MY_NODE_ID
             valueFrom:
@@ -527,17 +531,17 @@ objects:
           - name: trino-etc
             mountPath: /etc/trino
           - name: trino-scripts
-            mountPath: /etc/trino/scripts
+            mountPath: /etc/trino-scripts
           - name: trino-config
             mountPath: /etc/trino-init
-          - name: trino-config-catalog
-            mountPath: /etc/trino-init/catalog
+          # - name: trino-config-catalog
+          #   mountPath: /etc/trino-init/catalog
           - name: trino-data
             mountPath: /data/trino/data
           - name: trino-logs
             mountPath: /data/trino/logs
           - name: hadoop-config
-            mountPath: /etc/trino-init/hadoop-config
+            mountPath: /etc/trino-hadoop-config
     objectStore:
     - ${S3_BUCKET_NAME}
     database:
