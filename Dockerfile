@@ -75,6 +75,10 @@ RUN sed -i '/networkaddress.cache.negative.ttl/d' $JAVA_HOME/lib/security/java.s
 RUN echo 'networkaddress.cache.ttl=0' >> $JAVA_HOME/lib/security/java.security
 RUN echo 'networkaddress.cache.negative.ttl=0' >> $JAVA_HOME/lib/security/java.security
 
+RUN chown -R 1000:0 ${HOME} /etc/passwd $(readlink -f ${JAVA_HOME}/lib/security/cacerts) && \
+    chmod -R 774 /etc/passwd $(readlink -f ${JAVA_HOME}/lib/security/cacerts) && \
+    chmod -R 775 ${HOME}
+
 # Update ulimits per https://trino.io/docs/current/installation/deployment.html
 RUN echo 'trino soft nofile 131072' >> /etc/security/limits.conf
 RUN echo 'trino hard nofile 131072' >> /etc/security/limits.conf
