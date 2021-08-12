@@ -198,7 +198,7 @@ objects:
     # log.properties: |-
     #   com.facebook.trino=INFO
     node.properties: |-
-      node.data-dir=/data/trino
+      node.data-dir=/data/trino/data
       node.environment=${ENV_NAME}
 - apiVersion: v1
   kind: ConfigMap
@@ -421,7 +421,7 @@ objects:
           - name: trino-config-catalog
             mountPath: /etc/trino-init/catalog
           - name: trino-data
-            mountPath: /data/trino
+            mountPath: /data/trino/data
           - name: trino-logs
             mountPath: /data/trino/logs
           - name: hadoop-config
@@ -533,7 +533,7 @@ objects:
           - name: trino-config-catalog
             mountPath: /etc/trino-init/catalog
           - name: trino-data
-            mountPath: /data/trino
+            mountPath: /data/trino/data
           - name: trino-logs
             mountPath: /data/trino/logs
           - name: hadoop-config

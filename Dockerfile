@@ -49,7 +49,7 @@ RUN \
 RUN \
     groupadd trino --gid 1000 && \
     useradd trino --uid 1000 --gid 1000 && \
-    mkdir -p /usr/lib/trino/var /data/trino/logs && \
+    mkdir -p /usr/lib/trino /data/trino/{data,logs} && \
     chown -R "trino:trino" /usr/lib/trino /data/trino
 
 ENV JAVA_HOME=/usr/lib/jvm/zulu11 \
@@ -64,24 +64,24 @@ COPY --chown=trino:trino default/etc $TRINO_HOME
 
 # https://docs.oracle.com/javase/7/docs/technotes/guides/net/properties.html
 # Java caches dns results forever, don't cache dns results forever:
-RUN touch $JAVA_HOME/lib/security/java.security \
-    && chown 1000:0 $JAVA_HOME/lib/security/java.security \
-    && chmod g+rw $JAVA_HOME/lib/security/java.security
-RUN sed -i '/networkaddress.cache.ttl/d' $JAVA_HOME/lib/security/java.security
-RUN sed -i '/networkaddress.cache.negative.ttl/d' $JAVA_HOME/lib/security/java.security
-RUN echo 'networkaddress.cache.ttl=0' >> $JAVA_HOME/lib/security/java.security
-RUN echo 'networkaddress.cache.negative.ttl=0' >> $JAVA_HOME/lib/security/java.security
+RUN touch $JAVA_HOME/lib/security/java.security && \
+    chown 1000:0 $JAVA_HOME/lib/security/java.security && \
+    chmod g+rw $JAVA_HOME/lib/security/java.security && \
+    sed -i '/networkaddress.cache.ttl/d' $JAVA_HOME/lib/security/java.security && \
+    sed -i '/networkaddress.cache.negative.ttl/d' $JAVA_HOME/lib/security/java.security && \
+    echo 'networkaddress.cache.ttl=0' >> $JAVA_HOME/lib/security/java.security && \
+    echo 'networkaddress.cache.negative.ttl=0' >> $JAVA_HOME/lib/security/java.security
 
 RUN chown -R 1000:0 ${HOME} /etc/passwd $(readlink -f ${JAVA_HOME}/lib/security/cacerts) && \
     chmod -R 774 /etc/passwd $(readlink -f ${JAVA_HOME}/lib/security/cacerts) && \
     chmod -R 775 ${HOME}
 
 # Update ulimits per https://trino.io/docs/current/installation/deployment.html
-RUN echo 'trino soft nofile 131072' >> /etc/security/limits.conf
-RUN echo 'trino hard nofile 131072' >> /etc/security/limits.conf
-
-RUN echo 'trino soft nproc 131072' >> /etc/security/limits.d/90-nproc.conf
-RUN echo 'trino hard nproc 131072' >> /etc/security/limits.d/90-nproc.conf
+RUN \
+    echo 'trino soft nofile 131072' >> /etc/security/limits.conf && \
+    echo 'trino hard nofile 131072' >> /etc/security/limits.conf && \
+    echo 'trino soft nproc 131072' >> /etc/security/limits.d/90-nproc.conf && \
+    echo 'trino hard nproc 131072' >> /etc/security/limits.d/90-nproc.conf
 
 EXPOSE 8080
 USER trino:trino
