@@ -380,6 +380,7 @@ objects:
           - name: trino-config
             configMap:
               name: trino-config
+              defaultMode: 420
           - name: trino-config-catalog
             configMap:
               name: trino-config-catalog
@@ -480,6 +481,7 @@ objects:
           - name: trino-config
             configMap:
               name: trino-config
+              defaultMode: 420
           - name: trino-config-catalog
             configMap:
               name: trino-config-catalog
