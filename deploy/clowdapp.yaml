@@ -321,10 +321,10 @@ objects:
         image: ${IMAGE}:${IMAGE_TAG}
         initContainers:
           - command:
-              - /etc/trino/initialize_trino.sh
+              - /etc/trino/scripts/initialize_trino.sh
             inheritEnv: true
         command:
-          - /etc/trino/entrypoint.sh
+          - /etc/trino/scripts/entrypoint.sh
         args:
           - /etc/trino/bin/launcher
           - run
@@ -410,7 +410,7 @@ objects:
               name: hadoop-clowder-config
         volumeMounts:
           - name: trino-scripts
-            mountPath: /etc/trino
+            mountPath: /etc/trino/scripts
           - name: trino-config
             mountPath: /etc/trino
           - name: trino-config-catalog
@@ -432,10 +432,10 @@ objects:
         image: ${IMAGE}:${IMAGE_TAG}
         initContainers:
           - command:
-              - /etc/trino/initialize_trino.sh
+              - /etc/trino/scripts/initialize_trino.sh
             inheritEnv: true
         command:
-          - /etc/trino/entrypoint.sh
+          - /etc/trino/scripts/entrypoint.sh
         args:
           - /etc/trino/bin/launcher
           - run
@@ -521,7 +521,7 @@ objects:
               name: hadoop-clowder-config
         volumeMounts:
           - name: trino-scripts
-            mountPath: /etc/trino
+            mountPath: /etc/trino/scripts
           - name: trino-config
             mountPath: /etc/trino
           - name: trino-config-catalog
