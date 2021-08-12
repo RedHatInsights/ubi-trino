@@ -35,11 +35,8 @@ LABEL io.k8s.display-name="OpenShift Trino" \
 RUN yum -y update && yum clean all
 
 RUN \
-    # install python3.6
-    dnf -y --disableplugin=subscription-manager module enable python36 && \
-    dnf -y --disableplugin=subscription-manager --setopt=tsflags=nodocs install python36 && \
-    dnf --disableplugin=subscription-manager clean all && \
-    ln -s $(which python3) /usr/bin/python && \
+    # symlink the python3.6 installed in the container
+    ln -s /usr/libexec/platform-python /usr/bin/python && \
     # add the Azul RPM repository
     yum install -y https://cdn.azul.com/zulu/bin/zulu-repo-1.0.0-1.noarch.rpm && \
     set -xeu && \

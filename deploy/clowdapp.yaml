@@ -328,7 +328,10 @@ objects:
         command:
           - /etc/trino/scripts/entrypoint.sh
         args:
-          - /usr/lib/trino/run-trino
+          # - /usr/lib/trino/run-trino
+          - /bin/bash
+          - sleep
+          - infinity
         env:
           - name: MY_NODE_ID
             valueFrom:
