@@ -135,6 +135,7 @@ objects:
               # file due to permissions)
               cat /tmp/passwd > /etc/passwd
               rm /tmp/passwd
+              echo "Done adding user ${USER_NAME:-trino} with current UID $(id -u) to /etc/passwd"
           fi
       fi
       exec "$@"
@@ -327,10 +328,7 @@ objects:
         command:
           - /etc/trino/scripts/entrypoint.sh
         args:
-          - /usr/lib/trino/bin/launcher
-          - run
-          - --etc-dir
-          - /etc/trino
+          - /usr/lib/trino/run-trino
         env:
           - name: MY_NODE_ID
             valueFrom:
@@ -442,10 +440,7 @@ objects:
         command:
           - /etc/trino/scripts/entrypoint.sh
         args:
-          - /usr/lib/trino/bin/launcher
-          - run
-          - --etc-dir
-          - /etc/trino
+          - /usr/lib/trino/run-trino
         env:
           - name: MY_NODE_ID
             valueFrom:

@@ -52,7 +52,7 @@ RUN \
 RUN \
     groupadd trino --gid 1000 && \
     useradd trino --uid 1000 --gid 1000 && \
-    mkdir -p /usr/lib/trino /data/trino/logs && \
+    mkdir -p /usr/lib/trino/var /data/trino/logs && \
     chown -R "trino:trino" /usr/lib/trino /data/trino
 
 ENV JAVA_HOME=/usr/lib/jvm/zulu11 \
