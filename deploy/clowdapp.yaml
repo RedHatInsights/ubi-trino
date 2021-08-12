@@ -327,7 +327,7 @@ objects:
         command:
           - /etc/trino/scripts/entrypoint.sh
         args:
-          - /etc/trino/bin/launcher
+          - /usr/lib/trino/bin/launcher
           - run
         env:
           - name: MY_NODE_ID
@@ -440,7 +440,7 @@ objects:
         command:
           - /etc/trino/scripts/entrypoint.sh
         args:
-          - /etc/trino/bin/launcher
+          - /usr/lib/trino/bin/launcher
           - run
         env:
           - name: MY_NODE_ID
