@@ -26,9 +26,6 @@ COPY default ${WORK_DIR}/
 
 FROM registry.access.redhat.com/ubi8/ubi:latest
 
-ENV LC_ALL=en_US.UTF-8 \
-    LANG=en_US.UTF-8
-
 LABEL io.k8s.display-name="OpenShift Trino" \
       io.k8s.description="This is an image used by Cost Management to install and run Trino." \
       summary="This is an image used by Cost Management to install and run Trino." \
@@ -58,8 +55,8 @@ RUN \
     mkdir -p /usr/lib/trino /data/trino/logs && \
     chown -R "trino:trino" /usr/lib/trino /data/trino
 
-ENV JAVA_HOME /usr/lib/jvm/zulu11 \
-    TRINO_HOME /etc/trino
+ENV JAVA_HOME=/usr/lib/jvm/zulu11 \
+    TRINO_HOME=/etc/trino
 
 ARG PROMETHEUS_VERSION
 ARG TRINO_VERSION
