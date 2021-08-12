@@ -200,7 +200,7 @@ objects:
     #   com.facebook.trino=INFO
     node.properties: |-
       node.data-dir=/data/trino/data
-      node.environment=${ENV_NAME}
+      node.environment=${NODE_ENV}
 - apiVersion: v1
   kind: ConfigMap
   metadata:
@@ -630,3 +630,5 @@ parameters:
   required: false
 - name: S3_BUCKET_NAME
   value: 'hccm-s3'
+- name: NODE_ENV
+  value: 'production'
