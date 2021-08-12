@@ -19,7 +19,7 @@ IMAGE="${IMAGE_REPO}/${ORG}/${APP}"
 CICD_URL=https://raw.githubusercontent.com/RedHatInsights/bonfire/master/cicd
 curl -s $CICD_URL/bootstrap.sh > .cicd_bootstrap.sh && source .cicd_bootstrap.sh
 
-changed=$(git diff --name-only origin -- .|| egrep "default|bin|Dockerfile|image_build_num.txt")
+changed=$(git diff --name-only HEAD|| egrep "default|bin|Dockerfile|image_build_num.txt")
 if [ -n "$changed" ]; then
 
     source $CICD_ROOT/build.sh
