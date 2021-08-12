@@ -388,8 +388,10 @@ objects:
               name: trino-config
               items:
               - key: initialize_trino.sh
+                path: initialize_trino.sh
                 mode: 509
               - key: entrypoint.sh
+                path: entrypoint.sh
                 mode: 509
           - name: trino-config
             configMap:
@@ -497,8 +499,10 @@ objects:
               name: trino-config
               items:
               - key: initialize_trino.sh
+                path: initialize_trino.sh
                 mode: 509
               - key: entrypoint.sh
+                path: entrypoint.sh
                 mode: 509
           - name: trino-config
             configMap:
