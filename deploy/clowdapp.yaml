@@ -331,8 +331,8 @@ objects:
           - /etc/trino/scripts/entrypoint.sh
         args:
           # - /usr/lib/trino/run-trino
-          # - --config-dir=/etc/trino/config
           # - --etc-dir=/etc/trino
+          # - --config=/etc/trino/config.properties.coordinator
           - sleep
           - infinity
         env:
@@ -448,6 +448,7 @@ objects:
         args:
           - /usr/lib/trino/run-trino
           - --etc-dir=/etc/trino
+          - --config=/etc/trino/config.properties.worker
         env:
           - name: MY_NODE_ID
             valueFrom:
