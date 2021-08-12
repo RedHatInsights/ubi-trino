@@ -146,8 +146,9 @@ objects:
       app: trino
     jvm.config: |-
       -server
-      -Xmx16G
       -XX:+UseContainerSupport
+      -XX:InitialRAMPercentage=50.0
+      -XX:MaxRAMPercentage=75.0
       -XX:-UseBiasedLocking
       -XX:+UseG1GC
       -XX:G1HeapRegionSize=32M
@@ -385,7 +386,7 @@ objects:
         volumes:
           - name: trino-scripts
             configMap:
-              name: trino-config
+              name: trino-scripts
               items:
               - key: initialize_trino.sh
                 path: initialize_trino.sh
@@ -496,7 +497,7 @@ objects:
         volumes:
           - name: trino-scripts
             configMap:
-              name: trino-config
+              name: trino-scripts
               items:
               - key: initialize_trino.sh
                 path: initialize_trino.sh
