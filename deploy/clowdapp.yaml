@@ -372,7 +372,7 @@ objects:
           timeoutSeconds: 5
         readinessProbe:
           httpGet:
-            path: /ui/
+            path: /v1/info/state
             port: 8000
             scheme: HTTP
           initialDelaySeconds: 60
@@ -481,8 +481,8 @@ objects:
           timeoutSeconds: 3
         readinessProbe:
           httpGet:
-            path: /
-            port: 9000
+            path: /v1/info/state
+            port: 8000
             scheme: HTTP
           initialDelaySeconds: 60
           periodSeconds: 10
@@ -535,6 +535,29 @@ objects:
       - koku
 
 parameters:
+# Clowdapp Params
+- description: Image name
+  name: IMAGE
+  value: quay.io/cloudservices/ubi-trino
+  required: true
+- description: Image tag
+  displayName: Image tag
+  name: IMAGE_TAG
+  value: '360-001'
+  required: true
+- name: ENV_NAME
+  required: false
+- name: S3_BUCKET_NAME
+  value: 'hccm-s3'
+- name: NODE_ENV
+  value: 'production'
+
+# Coordinator Params
+- description: Number of replicas for the coordinator
+  displayName: Coordinator replica count
+  name: COORDINATOR_REPLICAS
+  required: true
+  value: '1'
 - description: Initial amount of memory the Django container will request.
   displayName: Memory Request
   name: COORDINATOR_MEMORY_REQUEST
@@ -555,6 +578,13 @@ parameters:
   name: COORDINATOR_CPU_LIMIT
   required: true
   value: 500m
+
+# Worker Params
+- description: Number of replicas for the worker
+  displayName: Worker replica count
+  name: WORKER_REPLICAS
+  required: true
+  value: '3'
 - description: Initial amount of memory the Django container will request.
   displayName: Memory Request
   name: WORKER_MEMORY_REQUEST
@@ -575,25 +605,8 @@ parameters:
   name: WORKER_CPU_LIMIT
   required: true
   value: '1'
-- description: Number of replicas for the coordinator
-  displayName: Coordinator replica count
-  name: COORDINATOR_REPLICAS
-  required: true
-  value: '1'
-- description: Number of replicas for the worker
-  displayName: Worker replica count
-  name: WORKER_REPLICAS
-  required: true
-  value: '3'
-- description: Image name
-  name: IMAGE
-  value: quay.io/cloudservices/ubi-trino
-  required: true
-- description: Image tag
-  displayName: Image tag
-  name: IMAGE_TAG
-  value: '348-002'
-  required: true
+
+# JVM Params
 - description: JVM InitialRAMPercentage option
   displayName: JVM.InitialRAMPercentage
   name: JVM_INITIAL_RAM_PERCENTAGE
@@ -602,6 +615,8 @@ parameters:
   displayName: JVM.MaxRAMPercentage
   name: JVM_MAX_RAM_PERCENTAGE
   value: '75.0'
+
+# Trino configruation Params
 - description: Max Memory for a query
   displayName: query.max-memory
   name: QUERY_MAX_MEMORY
@@ -617,9 +632,3 @@ parameters:
   name: QUERY_MAX_TOTAL_MEMORY_PER_NODE
   value: '2GB'
   required: true
-- name: ENV_NAME
-  required: false
-- name: S3_BUCKET_NAME
-  value: 'hccm-s3'
-- name: NODE_ENV
-  value: 'production'
