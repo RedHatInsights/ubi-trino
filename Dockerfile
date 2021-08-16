@@ -83,7 +83,7 @@ RUN \
     echo 'trino soft nproc 131072' >> /etc/security/limits.d/90-nproc.conf && \
     echo 'trino hard nproc 131072' >> /etc/security/limits.d/90-nproc.conf
 
-EXPOSE 8080
+EXPOSE 8000
 USER trino:trino
 ENV LANG en_US.UTF-8
 CMD ["/usr/lib/trino/run-trino"]
