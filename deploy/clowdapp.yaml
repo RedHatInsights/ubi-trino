@@ -17,37 +17,6 @@ objects:
     labels:
       app: trino
   data:
-    initialize_trino.sh: |
-      #!/bin/bash
-      set -e
-      if [[ ! -z "${ACG_CONFIG}" ]]; then
-        export DATABASE_HOST=$(jq -r '.database.hostname' ${ACG_CONFIG})
-        export DATABASE_PORT=$(jq -r '.database.port' ${ACG_CONFIG})
-        export DATABASE_USER=$(jq -r '.database.username' ${ACG_CONFIG})
-        export DATABASE_PASSWORD=$(jq -r '.database.password' ${ACG_CONFIG})
-        export DATABASE_NAME=$(jq -r '.database.name' ${ACG_CONFIG})
-        export DATABASE_SSLMODE=$(jq -r '.database.sslMode' ${ACG_CONFIG})
-        if [[ $DATABASE_SSLMODE = "null" ]]; then
-          unset DATABASE_SSLMODE
-        fi
-        certString=$(jq -r '.database.rdsCa' ${ACG_CONFIG})
-        if [[ $certString != "null" ]]; then
-          temp_file=$(mktemp)
-          echo "RDS Cert Path: $temp_file"
-          echo "$certString" > $temp_file
-          export PGSSLROOTCERT=$temp_file
-        fi
-      fi
-      echo "Copy config files to ${TRINO_HOME}/"
-      cp -v -L -r -f /etc/trino-init/* ${TRINO_HOME}/
-      if [ ! -f ${TRINO_HOME}/catalog/postgres.properties ]; then
-        echo "Creating trino connector configuration..."
-        echo "connector.name=postgresql" >> ${TRINO_HOME}/catalog/postgres.properties
-        echo "connection-url=jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}" >> ${TRINO_HOME}/catalog/postgres.properties
-        echo "connection-user=${DATABASE_USER}" >> ${TRINO_HOME}/catalog/postgres.properties
-        echo "connection-password=${DATABASE_PASSWORD}" >> ${TRINO_HOME}/catalog/postgres.properties
-        echo "postgresql.array-mapping=AS_ARRAY" >> ${TRINO_HOME}/catalog/postgres.properties
-      fi
     entrypoint.sh: |
       #!/bin/bash
       function importCert() {
@@ -70,6 +39,23 @@ objects:
       set -e
 
       if [[ ! -z "${ACG_CONFIG}" ]]; then
+        export DATABASE_HOST=$(jq -r '.database.hostname' ${ACG_CONFIG})
+        export DATABASE_PORT=$(jq -r '.database.port' ${ACG_CONFIG})
+        export DATABASE_USER=$(jq -r '.database.username' ${ACG_CONFIG})
+        export DATABASE_PASSWORD=$(jq -r '.database.password' ${ACG_CONFIG})
+        export DATABASE_NAME=$(jq -r '.database.name' ${ACG_CONFIG})
+        export DATABASE_SSLMODE=$(jq -r '.database.sslMode' ${ACG_CONFIG})
+        if [[ $DATABASE_SSLMODE = "null" ]]; then
+          unset DATABASE_SSLMODE
+        fi
+        certString=$(jq -r '.database.rdsCa' ${ACG_CONFIG})
+        if [[ $certString != "null" ]]; then
+          temp_file=$(mktemp)
+          echo "RDS Cert Path: $temp_file"
+          echo "$certString" > $temp_file
+          export PGSSLROOTCERT=$temp_file
+        fi
+
         export AWS_ACCESS_KEY_ID=$(jq -r '.objectStore.buckets[0].accessKey' ${ACG_CONFIG})
         export AWS_SECRET_ACCESS_KEY=$(jq -r '.objectStore.buckets[0].secretKey' ${ACG_CONFIG})
         export S3_BUCKET_NAME=$(jq -r '.objectStore.buckets[0].requestedName' ${ACG_CONFIG})
@@ -88,6 +74,16 @@ objects:
           S3_ENDPOINT="${S3_ENDPOINT}:${OBJECTSTORE_PORT}"
         fi
         export S3_ENDPOINT
+      fi
+      echo "Copy config files to ${TRINO_HOME}/"
+      cp -v -L -r -f /etc/trino-init/* ${TRINO_HOME}/
+      if [ ! -f ${TRINO_HOME}/catalog/postgres.properties ]; then
+        echo "Creating trino connector configuration..."
+        echo "connector.name=postgresql" >> ${TRINO_HOME}/catalog/postgres.properties
+        echo "connection-url=jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}" >> ${TRINO_HOME}/catalog/postgres.properties
+        echo "connection-user=${DATABASE_USER}" >> ${TRINO_HOME}/catalog/postgres.properties
+        echo "connection-password=${DATABASE_PASSWORD}" >> ${TRINO_HOME}/catalog/postgres.properties
+        echo "postgresql.array-mapping=AS_ARRAY" >> ${TRINO_HOME}/catalog/postgres.properties
       fi
       # always add the openshift service-ca.crt if it exists
       if [ -a /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt ]; then
@@ -175,6 +171,11 @@ objects:
       -Dcom.sun.management.jmxremote.port=10000
       -Dcom.sun.management.jmxremote.rmi.port=10000
       -Djava.rmi.server.hostname=127.0.0.1
+    log.properties: |-
+      io.trino=INFO
+    node.properties: |-
+      node.data-dir=/data/trino/data
+      node.environment=${NODE_ENV}
     config.properties.coordinator: |-
       coordinator=true
       node-scheduler.include-coordinator=true
@@ -195,11 +196,6 @@ objects:
       query.max-memory=${QUERY_MAX_MEMORY}
       query.max-memory-per-node=${QUERY_MAX_MEMORY_PER_NODE}
       query.max-total-memory-per-node=${QUERY_MAX_TOTAL_MEMORY_PER_NODE}
-    log.properties: |-
-      io.trino=INFO
-    node.properties: |-
-      node.data-dir=/data/trino/data
-      node.environment=${NODE_ENV}
 - apiVersion: v1
   kind: ConfigMap
   metadata:
@@ -322,10 +318,10 @@ objects:
           enabled: true
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG}
-        initContainers:
-          - command:
-              - /etc/trino/scripts/initialize_trino.sh
-            inheritEnv: true
+        # initContainers:
+        #   - command:
+        #       - /etc/trino/scripts/initialize_trino.sh
+        #     inheritEnv: true
         command:
           - /etc/trino/scripts/entrypoint.sh
         args:
@@ -391,9 +387,9 @@ objects:
             configMap:
               name: trino-scripts
               items:
-              - key: initialize_trino.sh
-                path: initialize_trino.sh
-                mode: 509
+              # - key: initialize_trino.sh
+              #   path: initialize_trino.sh
+              #   mode: 509
               - key: entrypoint.sh
                 path: entrypoint.sh
                 mode: 509
@@ -436,10 +432,10 @@ objects:
           enabled: true
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG}
-        initContainers:
-          - command:
-              - /etc/trino/scripts/initialize_trino.sh
-            inheritEnv: true
+        # initContainers:
+        #   - command:
+        #       - /etc/trino/scripts/initialize_trino.sh
+        #     inheritEnv: true
         command:
           - /etc/trino/scripts/entrypoint.sh
         args:
@@ -505,9 +501,9 @@ objects:
             configMap:
               name: trino-scripts
               items:
-              - key: initialize_trino.sh
-                path: initialize_trino.sh
-                mode: 509
+              # - key: initialize_trino.sh
+              #   path: initialize_trino.sh
+              #   mode: 509
               - key: entrypoint.sh
                 path: entrypoint.sh
                 mode: 509
