@@ -145,8 +145,8 @@ objects:
     jvm.config: |-
       -server
       -XX:+UseContainerSupport
-      -XX:InitialRAMPercentage=${{JVM_INITIAL_RAM_PERCENTAGE}}
-      -XX:MaxRAMPercentage=${{JVM_MAX_RAM_PERCENTAGE}}
+      -XX:InitialRAMPercentage=${JVM_INITIAL_RAM_PERCENTAGE}
+      -XX:MaxRAMPercentage=${JVM_MAX_RAM_PERCENTAGE}
       -XX:-UseBiasedLocking
       -XX:+UseG1GC
       -XX:G1HeapRegionSize=32M
