@@ -314,6 +314,8 @@ objects:
       webServices:
         public:
           enabled: true
+        private:
+          enabled: true
         metrics:
           enabled: true
       podSpec:
@@ -420,6 +422,8 @@ objects:
       minReplicas: ${{WORKER_REPLICAS}}
       webServices:
         public:
+          enabled: true
+        private:
           enabled: true
         metrics:
           enabled: true
