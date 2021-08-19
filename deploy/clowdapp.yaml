@@ -187,6 +187,7 @@ objects:
       query.max-total-memory-per-node=${QUERY_MAX_TOTAL_MEMORY_PER_NODE}
       web-ui.authentication.type=fixed
       web-ui.user=trino
+      protocol.v1.alternate-header-name=Presto
     config.properties.worker: |-
       coordinator=false
       node-scheduler.include-coordinator=true
@@ -196,6 +197,7 @@ objects:
       query.max-memory=${QUERY_MAX_MEMORY}
       query.max-memory-per-node=${QUERY_MAX_MEMORY_PER_NODE}
       query.max-total-memory-per-node=${QUERY_MAX_TOTAL_MEMORY_PER_NODE}
+      protocol.v1.alternate-header-name=Presto
 - apiVersion: v1
   kind: ConfigMap
   metadata:
