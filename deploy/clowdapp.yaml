@@ -1,4 +1,4 @@
-apiVersion: v1
+apiVersion: template.openshift.io/v1
 kind: Template
 metadata:
   name: trino-template
@@ -281,6 +281,9 @@ objects:
           type: GAUGE
     hive.properties: |-
       connector.name=hive-hadoop2
+      hive.allow-add-column=true
+      hive.allow-drop-column=true
+      hive.allow-rename-column=true
       hive.allow-drop-table=true
       hive.allow-rename-table=true
       hive.collect-column-statistics-on-write=true
