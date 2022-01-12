@@ -279,6 +279,9 @@ objects:
           type: GAUGE
     hive.properties: |-
       connector.name=hive-hadoop2
+      hive.allow-add-column=true
+      hive.allow-drop-column=true
+      hive.allow-rename-column=true
       hive.allow-drop-table=true
       hive.allow-rename-table=true
       hive.collect-column-statistics-on-write=true
@@ -289,7 +292,8 @@ objects:
       hive.metastore.uri=thrift://hive-metastore:8000
       hive.parquet.use-column-names=true
       hive.s3.path-style-access=true
-      hive.s3.sse.enabled=true
+      hive.s3.sse.enabled=${S3_SSE_ENABLED}
+      hive.s3select-pushdown.enabled=${S3_SELECT_PUSHDOWN_ENABLED}
       hive.storage-format=Parquet
     blackhole.propeties: |-
       connector.name=blackhole
@@ -572,7 +576,7 @@ parameters:
   displayName: CPU Request
   name: COORDINATOR_CPU_REQUEST
   required: true
-  value: 200m
+  value: 250m
 - description: Maximum amount of cpu the Django container can use.
   displayName: CPU Limit
   name: COORDINATOR_CPU_LIMIT
@@ -584,7 +588,7 @@ parameters:
   displayName: Worker replica count
   name: WORKER_REPLICAS
   required: true
-  value: '3'
+  value: '2'
 - description: Initial amount of memory the Django container will request.
   displayName: Memory Request
   name: WORKER_MEMORY_REQUEST
@@ -599,12 +603,12 @@ parameters:
   displayName: CPU Request
   name: WORKER_CPU_REQUEST
   required: true
-  value: 500m
+  value: 250m
 - description: Maximum amount of cpu the Django container can use.
   displayName: CPU Limit
   name: WORKER_CPU_LIMIT
   required: true
-  value: '1'
+  value: 500m
 
 # JVM Params
 - description: JVM InitialRAMPercentage option
@@ -632,3 +636,13 @@ parameters:
   name: QUERY_MAX_TOTAL_MEMORY_PER_NODE
   value: '2GB'
   required: true
+
+# Trino Hive config
+- description: Whether to use SSE encryption
+  displayName: hive.s3.sse.enabled
+  name: S3_SSE_ENABLED
+  value: 'True'
+- description: Whether to use S3 Pushdown for queries
+  displayName: hive.s3select-pushdown.enabled
+  name: S3_SELECT_PUSHDOWN_ENABLED
+  value: 'True'
