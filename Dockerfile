@@ -26,6 +26,8 @@ COPY default ${WORK_DIR}/
 
 FROM registry.access.redhat.com/ubi8/ubi:latest
 
+USER root
+
 LABEL io.k8s.display-name="OpenShift Trino" \
       io.k8s.description="This is an image used by Cost Management to install and run Trino." \
       summary="This is an image used by Cost Management to install and run Trino." \
