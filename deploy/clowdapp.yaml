@@ -549,7 +549,7 @@ parameters:
 - description: Image tag
   displayName: Image tag
   name: IMAGE_TAG
-  value: '360-001'
+  value: '368-001'
   required: true
 - name: ENV_NAME
   required: false
