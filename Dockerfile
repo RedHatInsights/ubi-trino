@@ -24,7 +24,7 @@ chmod +x ${WORK_DIR}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar
 COPY bin ${WORK_DIR}/trino-server-${TRINO_VERSION}
 COPY default ${WORK_DIR}/
 
-FROM registry.access.redhat.com/ubi8/ubi:latest
+FROM registry.access.redhat.com/ubi8/ubi:8.5-214
 
 LABEL io.k8s.display-name="OpenShift Trino" \
       io.k8s.description="This is an image used by Cost Management to install and run Trino." \
