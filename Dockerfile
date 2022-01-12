@@ -26,8 +26,6 @@ COPY default ${WORK_DIR}/
 
 FROM registry.access.redhat.com/ubi8/ubi:latest
 
-USER root
-
 LABEL io.k8s.display-name="OpenShift Trino" \
       io.k8s.description="This is an image used by Cost Management to install and run Trino." \
       summary="This is an image used by Cost Management to install and run Trino." \
@@ -52,7 +50,7 @@ RUN \
     groupadd trino --gid 1000 && \
     useradd trino --uid 1000 --gid 1000 && \
     mkdir -p /usr/lib/trino /data/trino/{data,logs} && \
-    chown -R "trino:trino" /usr/lib/trino /data/trino
+    chown -R "trino:trino" /usr/lib/trino /data/trino /usr/lib/jvm/zulu11
 
 ENV JAVA_HOME=/usr/lib/jvm/zulu11 \
     TRINO_HOME=/etc/trino
