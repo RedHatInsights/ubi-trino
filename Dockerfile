@@ -55,9 +55,10 @@ RUN \
 ENV JAVA_HOME=/usr/lib/jvm/zulu11 \
     TRINO_HOME=/etc/trino
 
-RUN echo $JAVA_HOME
-RUN echo $JAVA_HOME/lib
-RUN echo $JAVA_HOME/lib/security
+RUN ls $JAVA_HOME
+RUN ls $JAVA_HOME/lib
+RUN ls $JAVA_HOME/lib/security
+RUN exit 1
 # https://docs.oracle.com/javase/7/docs/technotes/guides/net/properties.html
 # Java caches dns results forever, don't cache dns results forever:
 # RUN touch $JAVA_HOME/lib/security/java.security && \
