@@ -55,35 +55,38 @@ RUN \
 ENV JAVA_HOME=/usr/lib/jvm/zulu11 \
     TRINO_HOME=/etc/trino
 
+RUN echo $JAVA_HOME
+RUN echo $JAVA_HOME/lib
+RUN echo $JAVA_HOME/lib/security
 # https://docs.oracle.com/javase/7/docs/technotes/guides/net/properties.html
 # Java caches dns results forever, don't cache dns results forever:
-RUN touch $JAVA_HOME/lib/security/java.security && \
-    chown 1000:0 $JAVA_HOME/lib/security/java.security && \
-    chmod g+rw $JAVA_HOME/lib/security/java.security && \
-    sed -i '/networkaddress.cache.ttl/d' $JAVA_HOME/lib/security/java.security && \
-    sed -i '/networkaddress.cache.negative.ttl/d' $JAVA_HOME/lib/security/java.security && \
-    echo 'networkaddress.cache.ttl=0' >> $JAVA_HOME/lib/security/java.security && \
-    echo 'networkaddress.cache.negative.ttl=0' >> $JAVA_HOME/lib/security/java.security
+# RUN touch $JAVA_HOME/lib/security/java.security && \
+#     chown 1000:0 $JAVA_HOME/lib/security/java.security && \
+#     chmod g+rw $JAVA_HOME/lib/security/java.security && \
+#     sed -i '/networkaddress.cache.ttl/d' $JAVA_HOME/lib/security/java.security && \
+#     sed -i '/networkaddress.cache.negative.ttl/d' $JAVA_HOME/lib/security/java.security && \
+#     echo 'networkaddress.cache.ttl=0' >> $JAVA_HOME/lib/security/java.security && \
+#     echo 'networkaddress.cache.negative.ttl=0' >> $JAVA_HOME/lib/security/java.security
 
-RUN chown -R 1000:0 ${HOME} /etc/passwd $(readlink -f ${JAVA_HOME}/lib/security/cacerts) && \
-    chmod -R 774 /etc/passwd $(readlink -f ${JAVA_HOME}/lib/security/cacerts) && \
-    chmod -R 775 ${HOME}
+# RUN chown -R 1000:0 ${HOME} /etc/passwd $(readlink -f ${JAVA_HOME}/lib/security/cacerts) && \
+#     chmod -R 774 /etc/passwd $(readlink -f ${JAVA_HOME}/lib/security/cacerts) && \
+#     chmod -R 775 ${HOME}
 
-# Update ulimits per https://trino.io/docs/current/installation/deployment.html
-RUN \
-    echo 'trino soft nofile 131072' >> /etc/security/limits.conf && \
-    echo 'trino hard nofile 131072' >> /etc/security/limits.conf && \
-    echo 'trino soft nproc 131072' >> /etc/security/limits.d/90-nproc.conf && \
-    echo 'trino hard nproc 131072' >> /etc/security/limits.d/90-nproc.conf
+# # Update ulimits per https://trino.io/docs/current/installation/deployment.html
+# RUN \
+#     echo 'trino soft nofile 131072' >> /etc/security/limits.conf && \
+#     echo 'trino hard nofile 131072' >> /etc/security/limits.conf && \
+#     echo 'trino soft nproc 131072' >> /etc/security/limits.d/90-nproc.conf && \
+#     echo 'trino hard nproc 131072' >> /etc/security/limits.d/90-nproc.conf
 
-ARG PROMETHEUS_VERSION
-ARG TRINO_VERSION
-COPY --from=downloader /tmp/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar /usr/lib/trino/jmx_exporter.jar
-COPY --from=downloader /tmp/trino-cli-${TRINO_VERSION}-executable.jar /usr/bin/trino
-COPY --from=downloader --chown=trino:trino /tmp/trino-server-${TRINO_VERSION} /usr/lib/trino
-COPY --chown=trino:trino default/etc $TRINO_HOME
+# ARG PROMETHEUS_VERSION
+# ARG TRINO_VERSION
+# COPY --from=downloader /tmp/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar /usr/lib/trino/jmx_exporter.jar
+# COPY --from=downloader /tmp/trino-cli-${TRINO_VERSION}-executable.jar /usr/bin/trino
+# COPY --from=downloader --chown=trino:trino /tmp/trino-server-${TRINO_VERSION} /usr/lib/trino
+# COPY --chown=trino:trino default/etc $TRINO_HOME
 
-EXPOSE 8000
-USER trino:trino
-ENV LANG en_US.UTF-8
-CMD ["/usr/lib/trino/run-trino"]
+# EXPOSE 8000
+# USER trino:trino
+# ENV LANG en_US.UTF-8
+# CMD ["/usr/lib/trino/run-trino"]
