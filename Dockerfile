@@ -87,5 +87,3 @@ EXPOSE 8000
 USER trino:trino
 ENV LANG en_US.UTF-8
 CMD ["/usr/lib/trino/run-trino"]
-
-RUN exit 1
