@@ -1,7 +1,8 @@
 ARG PROMETHEUS_VERSION=0.16.1
-ARG TRINO_VERSION=360
+ARG TRINO_VERSION=368
+ARG UBI_VERSION=8.5
 
-FROM registry.access.redhat.com/ubi8/ubi:latest as downloader
+FROM registry.access.redhat.com/ubi8/ubi:${UBI_VERSION} as downloader
 
 ARG PROMETHEUS_VERSION
 ARG TRINO_VERSION
@@ -24,7 +25,7 @@ chmod +x ${WORK_DIR}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar
 COPY bin ${WORK_DIR}/trino-server-${TRINO_VERSION}
 COPY default ${WORK_DIR}/
 
-FROM registry.access.redhat.com/ubi8/ubi:latest
+FROM registry.access.redhat.com/ubi8/ubi:${UBI_VERSION}
 
 LABEL io.k8s.display-name="OpenShift Trino" \
       io.k8s.description="This is an image used by Cost Management to install and run Trino." \
@@ -55,13 +56,6 @@ RUN \
 ENV JAVA_HOME=/usr/lib/jvm/zulu11 \
     TRINO_HOME=/etc/trino
 
-ARG PROMETHEUS_VERSION
-ARG TRINO_VERSION
-COPY --from=downloader /tmp/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar /usr/lib/trino/jmx_exporter.jar
-COPY --from=downloader /tmp/trino-cli-${TRINO_VERSION}-executable.jar /usr/bin/trino
-COPY --from=downloader --chown=trino:trino /tmp/trino-server-${TRINO_VERSION} /usr/lib/trino
-COPY --chown=trino:trino default/etc $TRINO_HOME
-
 # https://docs.oracle.com/javase/7/docs/technotes/guides/net/properties.html
 # Java caches dns results forever, don't cache dns results forever:
 RUN touch $JAVA_HOME/lib/security/java.security && \
@@ -76,12 +70,19 @@ RUN chown -R 1000:0 ${HOME} /etc/passwd $(readlink -f ${JAVA_HOME}/lib/security/
     chmod -R 774 /etc/passwd $(readlink -f ${JAVA_HOME}/lib/security/cacerts) && \
     chmod -R 775 ${HOME}
 
-# Update ulimits per https://trino.io/docs/current/installation/deployment.html
+# # Update ulimits per https://trino.io/docs/current/installation/deployment.html
 RUN \
     echo 'trino soft nofile 131072' >> /etc/security/limits.conf && \
     echo 'trino hard nofile 131072' >> /etc/security/limits.conf && \
     echo 'trino soft nproc 131072' >> /etc/security/limits.d/90-nproc.conf && \
     echo 'trino hard nproc 131072' >> /etc/security/limits.d/90-nproc.conf
+
+ARG PROMETHEUS_VERSION
+ARG TRINO_VERSION
+COPY --from=downloader /tmp/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar /usr/lib/trino/jmx_exporter.jar
+COPY --from=downloader /tmp/trino-cli-${TRINO_VERSION}-executable.jar /usr/bin/trino
+COPY --from=downloader --chown=trino:trino /tmp/trino-server-${TRINO_VERSION} /usr/lib/trino
+COPY --chown=trino:trino default/etc $TRINO_HOME
 
 EXPOSE 8000
 USER trino:trino
