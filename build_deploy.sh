@@ -22,11 +22,21 @@ fi
 
 changed=$(git diff --name-only ^HEAD~1|| egrep -v deploy/clowdapp.yaml) # do not build if only the `deploy/clowdapp.yaml` file has changed
 if [ -n "$changed" ]; then
-    DOCKER_CONF="$PWD/.docker"
-    mkdir -p "$DOCKER_CONF"
-    docker --config="$DOCKER_CONF" login -u="$QUAY_USER" -p="$QUAY_TOKEN" quay.io
-    # docker --config="$DOCKER_CONF" login -u="$RH_REGISTRY_USER" -p="$RH_REGISTRY_TOKEN" registry.redhat.io
-    docker --config="$DOCKER_CONF" build -t "${IMAGE}:${IMAGE_TAG}" ${SCRIPT_DIR}
-    docker --config="$DOCKER_CONF" push "${IMAGE}:${IMAGE_TAG}"
-    docker --config="$DOCKER_CONF" logout
+    # docker is used on the RHEL7 nodes
+    # DOCKER_CONF="$PWD/.docker"
+    # mkdir -p "$DOCKER_CONF"
+    # docker --config="$DOCKER_CONF" login -u="$QUAY_USER" -p="$QUAY_TOKEN" quay.io
+    # # docker --config="$DOCKER_CONF" login -u="$RH_REGISTRY_USER" -p="$RH_REGISTRY_TOKEN" registry.redhat.io
+    # docker --config="$DOCKER_CONF" build -t "${IMAGE}:${IMAGE_TAG}" ${SCRIPT_DIR}
+    # docker --config="$DOCKER_CONF" push "${IMAGE}:${IMAGE_TAG}"
+    # docker --config="$DOCKER_CONF" logout
+
+    # podman is used on the RHEL8 nodes
+    podman login -u="$QUAY_USER" -p="$QUAY_TOKEN" quay.io
+    # podman login -u="$RH_REGISTRY_USER" -p="$RH_REGISTRY_TOKEN" registry.redhat.io
+    podman build -t "${IMAGE}:${IMAGE_TAG}" ${SCRIPT_DIR}
+    podman push "${IMAGE}:${IMAGE_TAG}"
+    podman tag "${IMAGE}:${IMAGE_TAG}" "${IMAGE}:latest"
+    podman push "${IMAGE}:latest"
+    podman logout
 fi

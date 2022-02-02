@@ -164,13 +164,6 @@ objects:
       -verbose:gc
       -Xlog:gc*:/data/trino/logs/gc.log
       -javaagent:/usr/lib/trino/jmx_exporter.jar=9000:/etc/trino/catalog/config.yaml
-      -Dcom.sun.management.jmxremote
-      -Dcom.sun.management.jmxremote.local.only=false
-      -Dcom.sun.management.jmxremote.ssl=false
-      -Dcom.sun.management.jmxremote.authenticate=false
-      -Dcom.sun.management.jmxremote.port=10000
-      -Dcom.sun.management.jmxremote.rmi.port=10000
-      -Djava.rmi.server.hostname=127.0.0.1
     log.properties: |-
       io.trino=INFO
     node.properties: |-
@@ -179,8 +172,8 @@ objects:
     config.properties.coordinator: |-
       coordinator=true
       node-scheduler.include-coordinator=true
-      http-server.http.port=8000
-      discovery.uri=http://trino-coordinator:8000
+      http-server.http.port=10000
+      discovery.uri=http://trino-coordinator:10000
       query.max-length=10000000
       query.max-memory=${QUERY_MAX_MEMORY}
       query.max-memory-per-node=${QUERY_MAX_MEMORY_PER_NODE}
@@ -190,8 +183,8 @@ objects:
     config.properties.worker: |-
       coordinator=false
       node-scheduler.include-coordinator=true
-      http-server.http.port=8000
-      discovery.uri=http://trino-coordinator:8000
+      http-server.http.port=10000
+      discovery.uri=http://trino-coordinator:10000
       query.max-length=10000000
       query.max-memory=${QUERY_MAX_MEMORY}
       query.max-memory-per-node=${QUERY_MAX_MEMORY_PER_NODE}
@@ -289,7 +282,7 @@ objects:
       hive.config.resources=/etc/trino/hadoop-config/core-site.xml
       hive.hdfs.authentication.type=NONE
       hive.metastore.authentication.type=NONE
-      hive.metastore.uri=thrift://hive-metastore:8000
+      hive.metastore.uri=thrift://hive-metastore:10000
       hive.parquet.use-column-names=true
       hive.s3.path-style-access=true
       hive.s3.sse.enabled=${S3_SSE_ENABLED}
@@ -317,7 +310,7 @@ objects:
       minReplicas: ${{COORDINATOR_REPLICAS}}
       webServices:
         public:
-          enabled: true
+          enabled: false
         private:
           enabled: true
         metrics:
@@ -369,7 +362,7 @@ objects:
         livenessProbe:
           failureThreshold: 3
           tcpSocket:
-            port: 8000
+            port: 10000
           initialDelaySeconds: 60
           periodSeconds: 10
           successThreshold: 1
@@ -377,7 +370,7 @@ objects:
         readinessProbe:
           httpGet:
             path: /v1/info/state
-            port: 8000
+            port: 10000
             scheme: HTTP
           initialDelaySeconds: 60
           periodSeconds: 10
@@ -426,7 +419,7 @@ objects:
       minReplicas: ${{WORKER_REPLICAS}}
       webServices:
         public:
-          enabled: true
+          enabled: false
         private:
           enabled: true
         metrics:
@@ -478,7 +471,7 @@ objects:
         livenessProbe:
           failureThreshold: 3
           tcpSocket:
-            port: 8000
+            port: 10000
           initialDelaySeconds: 60
           periodSeconds: 10
           successThreshold: 1
@@ -486,7 +479,7 @@ objects:
         readinessProbe:
           httpGet:
             path: /v1/info/state
-            port: 8000
+            port: 10000
             scheme: HTTP
           initialDelaySeconds: 60
           periodSeconds: 10
