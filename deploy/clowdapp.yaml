@@ -179,7 +179,7 @@ objects:
     config.properties.coordinator: |-
       coordinator=true
       node-scheduler.include-coordinator=true
-      http-server.http.port=1000
+      http-server.http.port=10000
       discovery.uri=http://trino-coordinator:10000
       query.max-length=10000000
       query.max-memory=${QUERY_MAX_MEMORY}
