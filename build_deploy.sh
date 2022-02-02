@@ -38,5 +38,4 @@ if [ -n "$changed" ]; then
     podman push "${IMAGE}:${IMAGE_TAG}"
     podman tag "${IMAGE}:${IMAGE_TAG}" "${IMAGE}:latest"
     podman push "${IMAGE}:latest"
-    podman logout
 fi
