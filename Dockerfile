@@ -84,7 +84,7 @@ COPY --from=downloader /tmp/trino-cli-${TRINO_VERSION}-executable.jar /usr/bin/t
 COPY --from=downloader --chown=trino:trino /tmp/trino-server-${TRINO_VERSION} /usr/lib/trino
 COPY --chown=trino:trino default/etc $TRINO_HOME
 
-EXPOSE 8000
+EXPOSE 10000
 USER trino:trino
 ENV LANG en_US.UTF-8
 CMD ["/usr/lib/trino/run-trino"]
