@@ -177,7 +177,6 @@ objects:
       query.max-length=10000000
       query.max-memory=${QUERY_MAX_MEMORY}
       query.max-memory-per-node=${QUERY_MAX_MEMORY_PER_NODE}
-      query.max-total-memory-per-node=${QUERY_MAX_TOTAL_MEMORY_PER_NODE}
       web-ui.authentication.type=fixed
       web-ui.user=trino
     config.properties.worker: |-
@@ -188,7 +187,6 @@ objects:
       query.max-length=10000000
       query.max-memory=${QUERY_MAX_MEMORY}
       query.max-memory-per-node=${QUERY_MAX_MEMORY_PER_NODE}
-      query.max-total-memory-per-node=${QUERY_MAX_TOTAL_MEMORY_PER_NODE}
 - apiVersion: v1
   kind: ConfigMap
   metadata:
@@ -350,8 +348,6 @@ objects:
             value: ${QUERY_MAX_MEMORY}
           - name: QUERY_MAX_MEMORY_PER_NODE
             value: ${QUERY_MAX_MEMORY_PER_NODE}
-          - name: QUERY_MAX_TOTAL_MEMORY_PER_NODE
-            value: ${QUERY_MAX_TOTAL_MEMORY_PER_NODE}
         resources:
           limits:
             cpu: ${COORDINATOR_CPU_LIMIT}
@@ -459,8 +455,6 @@ objects:
             value: ${QUERY_MAX_MEMORY}
           - name: QUERY_MAX_MEMORY_PER_NODE
             value: ${QUERY_MAX_MEMORY_PER_NODE}
-          - name: QUERY_MAX_TOTAL_MEMORY_PER_NODE
-            value: ${QUERY_MAX_TOTAL_MEMORY_PER_NODE}
         resources:
           limits:
             cpu: ${WORKER_CPU_LIMIT}
@@ -623,11 +617,6 @@ parameters:
   displayName: query.max-memory-per-node
   name: QUERY_MAX_MEMORY_PER_NODE
   value: '1GB'
-  required: true
-- description: Max Total Memory for a query
-  displayName: query.max-total-memory-per-node
-  name: QUERY_MAX_TOTAL_MEMORY_PER_NODE
-  value: '2GB'
   required: true
 
 # Trino Hive config

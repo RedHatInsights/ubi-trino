@@ -1,5 +1,5 @@
 ARG PROMETHEUS_VERSION=0.16.1
-ARG TRINO_VERSION=368
+ARG TRINO_VERSION=371
 ARG UBI_VERSION=8.5
 
 FROM registry.access.redhat.com/ubi8/ubi:${UBI_VERSION} as downloader
@@ -25,6 +25,8 @@ chmod +x ${WORK_DIR}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar
 COPY bin ${WORK_DIR}/trino-server-${TRINO_VERSION}
 COPY default ${WORK_DIR}/
 
+
+# Final container image:
 FROM registry.access.redhat.com/ubi8/ubi:${UBI_VERSION}
 
 LABEL io.k8s.display-name="OpenShift Trino" \
@@ -36,7 +38,7 @@ LABEL io.k8s.display-name="OpenShift Trino" \
 RUN yum -y update && yum clean all
 
 RUN \
-    # symlink the python3.6 installed in the container
+    # symlink the python3 installed in the container
     ln -s /usr/libexec/platform-python /usr/bin/python && \
     # add the Azul RPM repository
     yum install -y https://cdn.azul.com/zulu/bin/zulu-repo-1.0.0-1.noarch.rpm && \
@@ -50,11 +52,12 @@ RUN \
 RUN \
     groupadd trino --gid 1000 && \
     useradd trino --uid 1000 --gid 1000 && \
-    mkdir -p /usr/lib/trino /data/trino/{data,logs} && \
+    mkdir -p /usr/lib/trino /data/trino/{data,logs,spill} && \
     chown -R "trino:trino" /usr/lib/trino /data/trino
 
 ENV JAVA_HOME=/usr/lib/jvm/zulu11 \
-    TRINO_HOME=/etc/trino
+    TRINO_HOME=/etc/trino \
+    TRINO_VERSION=$TRINO_VERSION
 
 # https://docs.oracle.com/javase/7/docs/technotes/guides/net/properties.html
 # Java caches dns results forever, don't cache dns results forever:
