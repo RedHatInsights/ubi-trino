@@ -171,6 +171,8 @@ objects:
       node.environment=${NODE_ENV}
     config.properties.coordinator: |-
       coordinator=true
+      spill-enabled=true
+      spiller-spill-path=/data/trino/spill
       node-scheduler.include-coordinator=true
       http-server.http.port=10000
       discovery.uri=http://trino-coordinator:10000
@@ -182,6 +184,8 @@ objects:
       web-ui.user=trino
     config.properties.worker: |-
       coordinator=false
+      spill-enabled=true
+      spiller-spill-path=/data/trino/spill
       node-scheduler.include-coordinator=true
       http-server.http.port=10000
       discovery.uri=http://trino-coordinator:10000
@@ -397,6 +401,8 @@ objects:
             emptyDir: {}
           - name: trino-logs
             emptyDir: {}
+          - name: trino-spill
+            emptyDir: {}
           - name: hadoop-config
             configMap:
               name: hadoop-clowder-config
@@ -413,6 +419,8 @@ objects:
             mountPath: /data/trino/data
           - name: trino-logs
             mountPath: /data/trino/logs
+          - name: trino-spill
+            mountPath: /data/trino/spill
           - name: hadoop-config
             mountPath: /etc/trino/hadoop-config
     - name: worker
@@ -506,6 +514,8 @@ objects:
             emptyDir: {}
           - name: trino-logs
             emptyDir: {}
+          - name: trino-spill
+            emptyDir: {}
           - name: hadoop-config
             configMap:
               name: hadoop-clowder-config
@@ -522,6 +532,8 @@ objects:
             mountPath: /data/trino/data
           - name: trino-logs
             mountPath: /data/trino/logs
+          - name: trino-spill
+            mountPath: /data/trino/spill
           - name: hadoop-config
             mountPath: /etc/trino/hadoop-config
     objectStore:
@@ -611,7 +623,7 @@ parameters:
 - description: JVM MaxRAMPercentage option
   displayName: JVM.MaxRAMPercentage
   name: JVM_MAX_RAM_PERCENTAGE
-  value: '75.0'
+  value: '80.0'
 
 # Trino configruation Params
 - description: Max Memory for a query
