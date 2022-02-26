@@ -623,7 +623,7 @@ parameters:
 - description: JVM MaxRAMPercentage option
   displayName: JVM.MaxRAMPercentage
   name: JVM_MAX_RAM_PERCENTAGE
-  value: '80.0'
+  value: '75.0'
 
 # Trino configruation Params
 - description: Max Memory for a query
