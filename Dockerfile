@@ -72,13 +72,6 @@ RUN chown -R 1000:0 ${HOME} /etc/passwd $(readlink -f ${JAVA_HOME}/lib/security/
     chmod -R 774 /etc/passwd $(readlink -f ${JAVA_HOME}/lib/security/cacerts) && \
     chmod -R 775 ${HOME}
 
-# # Update ulimits per https://trino.io/docs/current/installation/deployment.html
-RUN \
-    echo 'trino soft nofile 131072' >> /etc/security/limits.conf && \
-    echo 'trino hard nofile 131072' >> /etc/security/limits.conf && \
-    echo 'trino soft nproc 131072' >> /etc/security/limits.d/90-nproc.conf && \
-    echo 'trino hard nproc 131072' >> /etc/security/limits.d/90-nproc.conf
-
 ARG PROMETHEUS_VERSION
 ARG TRINO_VERSION
 COPY --from=downloader /tmp/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar /usr/lib/trino/jmx_exporter.jar
