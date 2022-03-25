@@ -352,7 +352,7 @@ objects:
             value: ${QUERY_MAX_MEMORY}
           - name: QUERY_MAX_MEMORY_PER_NODE
             value: ${QUERY_MAX_MEMORY_PER_NODE}
-        machinePool: memory
+        machinePool: ${MACHINE_POOL_OPTION}
         resources:
           limits:
             cpu: ${COORDINATOR_CPU_LIMIT}
@@ -464,7 +464,7 @@ objects:
             value: ${QUERY_MAX_MEMORY}
           - name: QUERY_MAX_MEMORY_PER_NODE
             value: ${QUERY_MAX_MEMORY_PER_NODE}
-        machinePool: memory
+        machinePool: ${MACHINE_POOL_OPTION}
         resources:
           limits:
             cpu: ${WORKER_CPU_LIMIT}
@@ -556,6 +556,8 @@ parameters:
   value: 'hccm-s3'
 - name: NODE_ENV
   value: 'production'
+- name: MACHINE_POOL_OPTION
+  value: ''
 
 # Coordinator Params
 - description: Number of replicas for the coordinator
