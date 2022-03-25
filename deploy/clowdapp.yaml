@@ -352,6 +352,7 @@ objects:
             value: ${QUERY_MAX_MEMORY}
           - name: QUERY_MAX_MEMORY_PER_NODE
             value: ${QUERY_MAX_MEMORY_PER_NODE}
+        machinePool: memory
         resources:
           limits:
             cpu: ${COORDINATOR_CPU_LIMIT}
@@ -463,6 +464,7 @@ objects:
             value: ${QUERY_MAX_MEMORY}
           - name: QUERY_MAX_MEMORY_PER_NODE
             value: ${QUERY_MAX_MEMORY_PER_NODE}
+        machinePool: memory
         resources:
           limits:
             cpu: ${WORKER_CPU_LIMIT}
