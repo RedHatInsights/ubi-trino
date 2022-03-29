@@ -56,7 +56,8 @@ RUN \
     chown -R "trino:trino" /usr/lib/trino /data/trino
 
 ENV JAVA_HOME=/usr/lib/jvm/zulu11 \
-    TRINO_HOME=/etc/trino
+    TRINO_HOME=/etc/trino \
+    TRINO_HISTORY_FILE=/data/trino/.trino_history
 
 # https://docs.oracle.com/javase/7/docs/technotes/guides/net/properties.html
 # Java caches dns results forever, don't cache dns results forever:
