@@ -367,6 +367,8 @@ objects:
             value: ${QUERY_MAX_TOTAL_MEMORY}
           - name: MEMORY_HEAP_HEADROOM_PER_NODE
             value: ${MEMORY_HEAP_HEADROOM_PER_NODE}
+          - name: MAX_HEAP_SIZE
+            value: ${MAX_HEAP_SIZE}
         machinePool: ${MACHINE_POOL_OPTION}
         resources:
           limits:
@@ -487,6 +489,8 @@ objects:
             value: ${QUERY_MAX_TOTAL_MEMORY}
           - name: MEMORY_HEAP_HEADROOM_PER_NODE
             value: ${MEMORY_HEAP_HEADROOM_PER_NODE}
+          - name: MAX_HEAP_SIZE
+            value: ${MAX_HEAP_SIZE}
         machinePool: ${MACHINE_POOL_OPTION}
         resources:
           limits:
