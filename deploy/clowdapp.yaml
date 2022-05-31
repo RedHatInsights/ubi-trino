@@ -153,9 +153,8 @@ objects:
   data:
     jvm.config: |-
       -server
+      -Xmx${MAX_HEAP_SIZE}
       -XX:+UseContainerSupport
-      -XX:InitialRAMPercentage=${JVM_INITIAL_RAM_PERCENTAGE}
-      -XX:MaxRAMPercentage=${JVM_MAX_RAM_PERCENTAGE}
       -XX:-UseBiasedLocking
       -XX:+UseG1GC
       -XX:G1HeapRegionSize=32M
@@ -642,14 +641,10 @@ parameters:
   value: 500m
 
 # JVM Params
-- description: JVM InitialRAMPercentage option
-  displayName: JVM.InitialRAMPercentage
-  name: JVM_INITIAL_RAM_PERCENTAGE
-  value: '50.0'
-- description: JVM MaxRAMPercentage option
-  displayName: JVM.MaxRAMPercentage
-  name: JVM_MAX_RAM_PERCENTAGE
-  value: '75.0'
+- description: maximum heap size
+  displayName: xmx
+  name: MAX_HEAP_SIZE
+  value: '3G'
 
 # Trino configruation Params
 - description: Max amount of user memory a query can use on a worker (Trino default - JVM max memory * 0.3)
