@@ -168,6 +168,7 @@ objects:
       -XX:ReservedCodeCacheSize=512M
       -XX:PerMethodRecompilationCutoff=10000
       -XX:PerBytecodeRecompilationCutoff=10000
+      -XshowSettings:VM
       -Djdk.attach.allowAttachSelf=true
       -Djdk.nio.maxCachedBufferSize=2000000
       -verbose:gc
@@ -185,9 +186,10 @@ objects:
       node-scheduler.include-coordinator=true
       http-server.http.port=10000
       discovery.uri=http://trino-coordinator:10000
-      query.max-length=10000000
-      query.max-memory=${QUERY_MAX_MEMORY}
       query.max-memory-per-node=${QUERY_MAX_MEMORY_PER_NODE}
+      query.max-memory=${QUERY_MAX_MEMORY}
+      query.max-total-memory=${QUERY_MAX_TOTAL_MEMORY}
+      memory.heap-headroom-per-node=${MEMORY_HEAP_HEADROOM_PER_NODE}
       web-ui.authentication.type=fixed
       web-ui.user=trino
     config.properties.worker: |-
@@ -197,9 +199,10 @@ objects:
       node-scheduler.include-coordinator=true
       http-server.http.port=10000
       discovery.uri=http://trino-coordinator:10000
-      query.max-length=10000000
-      query.max-memory=${QUERY_MAX_MEMORY}
       query.max-memory-per-node=${QUERY_MAX_MEMORY_PER_NODE}
+      query.max-memory=${QUERY_MAX_MEMORY}
+      query.max-total-memory=${QUERY_MAX_TOTAL_MEMORY}
+      memory.heap-headroom-per-node=${MEMORY_HEAP_HEADROOM_PER_NODE}
 - apiVersion: v1
   kind: ConfigMap
   metadata:
@@ -357,10 +360,14 @@ objects:
                 fieldPath: metadata.namespace
           - name: S3_DATA_DIR
             value: 'data'
-          - name: QUERY_MAX_MEMORY
-            value: ${QUERY_MAX_MEMORY}
           - name: QUERY_MAX_MEMORY_PER_NODE
             value: ${QUERY_MAX_MEMORY_PER_NODE}
+          - name: QUERY_MAX_MEMORY
+            value: ${QUERY_MAX_MEMORY}
+          - name: QUERY_MAX_TOTAL_MEMORY
+            value: ${QUERY_MAX_TOTAL_MEMORY}
+          - name: MEMORY_HEAP_HEADROOM_PER_NODE
+            value: ${MEMORY_HEAP_HEADROOM_PER_NODE}
         machinePool: ${MACHINE_POOL_OPTION}
         resources:
           limits:
@@ -473,10 +480,14 @@ objects:
                 fieldPath: metadata.namespace
           - name: S3_DATA_DIR
             value: 'data'
-          - name: QUERY_MAX_MEMORY
-            value: ${QUERY_MAX_MEMORY}
           - name: QUERY_MAX_MEMORY_PER_NODE
             value: ${QUERY_MAX_MEMORY_PER_NODE}
+          - name: QUERY_MAX_MEMORY
+            value: ${QUERY_MAX_MEMORY}
+          - name: QUERY_MAX_TOTAL_MEMORY
+            value: ${QUERY_MAX_TOTAL_MEMORY}
+          - name: MEMORY_HEAP_HEADROOM_PER_NODE
+            value: ${MEMORY_HEAP_HEADROOM_PER_NODE}
         machinePool: ${MACHINE_POOL_OPTION}
         resources:
           limits:
@@ -641,15 +652,25 @@ parameters:
   value: '75.0'
 
 # Trino configruation Params
-- description: Max Memory for a query
+- description: Max amount of user memory a query can use on a worker (Trino default - JVM max memory * 0.3)
+  displayName: query.max-memory-per-node
+  name: QUERY_MAX_MEMORY_PER_NODE
+  value: '2GB'
+  required: true
+- description: Max amount of user memory a query can use across the entire cluster (Trino default - 20GB)
   displayName: query.max-memory
   name: QUERY_MAX_MEMORY
   value: '8GB'
   required: true
-- description: Max Memory per node for a query
-  displayName: query.max-memory-per-node
-  name: QUERY_MAX_MEMORY_PER_NODE
-  value: '1GB'
+- description: Max amount of memory a query can use across the entire cluster, including revocable memory (Trino default - query.max-memory * 2)
+  displayName: query.max-total-memory
+  name: QUERY_MAX_TOTAL_MEMORY
+  value: '16GB'
+  required: true
+- description: Amount of memory set aside as headroom/buffer in the JVM heap for allocations that are not tracked by Trino (Trino default - JVM max memory * 0.3)
+  displayName: memory.heap-headroom-per-node
+  name: MEMORY_HEAP_HEADROOM_PER_NODE
+  value: '2GB'
   required: true
 
 # Trino Hive config
