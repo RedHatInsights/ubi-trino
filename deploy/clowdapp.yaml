@@ -660,17 +660,17 @@ parameters:
 - description: Max amount of user memory a query can use across the entire cluster (Trino default - 20GB)
   displayName: query.max-memory
   name: QUERY_MAX_MEMORY
-  value: '8GB'
+  value: '4GB'
   required: true
 - description: Max amount of memory a query can use across the entire cluster, including revocable memory (Trino default - query.max-memory * 2)
   displayName: query.max-total-memory
   name: QUERY_MAX_TOTAL_MEMORY
-  value: '16GB'
+  value: '8GB'
   required: true
 - description: Amount of memory set aside as headroom/buffer in the JVM heap for allocations that are not tracked by Trino (Trino default - JVM max memory * 0.3)
   displayName: memory.heap-headroom-per-node
   name: MEMORY_HEAP_HEADROOM_PER_NODE
-  value: '2GB'
+  value: '1GB'
   required: true
 
 # Trino Hive config
