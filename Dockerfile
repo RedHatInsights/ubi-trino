@@ -84,9 +84,9 @@ COPY --chown=trino:trino default/etc $TRINO_HOME
 # Remove all unused plugins
 # Only hive, blackhole, jmx, memory, tpcds, and tpch are configured plugins.
 ARG to_delete="/TO_DELETE"
-RUN mkdir ${to_delete} \
-    mv /usr/lib/trino/plugin/* ${to_delete} \
-    mv ${to_delete}/{hive,blackhole,jmx,memory,tpcds,tpch} /usr/lib/trino/plugin/. \
+RUN mkdir ${to_delete} && \
+    mv /usr/lib/trino/plugin/* ${to_delete} && \
+    mv ${to_delete}/{hive,blackhole,jmx,memory,tpcds,tpch} /usr/lib/trino/plugin/. && \
     rm -rf ${to_delete}
 ###########################
 
