@@ -43,7 +43,7 @@ RUN \
     # add the Azul RPM repository
     yum install -y https://cdn.azul.com/zulu/bin/zulu-repo-1.0.0-1.noarch.rpm && \
     set -xeu && \
-    INSTALL_PKGS="zulu11-jdk less jq" && \
+    INSTALL_PKGS="zulu17-jdk less jq" && \
     yum install -y $INSTALL_PKGS && \
     yum clean all && \
     rm -rf /var/cache/yum
