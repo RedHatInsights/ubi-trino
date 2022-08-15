@@ -25,6 +25,15 @@ chmod +x ${WORK_DIR}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar
 COPY bin ${WORK_DIR}/trino-server-${TRINO_VERSION}
 COPY default ${WORK_DIR}/
 
+###########################
+# Remove all unused plugins
+# Only hive, blackhole, jmx, memory, postgresql, tpcds, and tpch are configured plugins.
+ARG to_delete="/TO_DELETE"
+RUN mkdir ${to_delete} && \
+    mv ${WORK_DIR}/trino-server-${TRINO_VERSION}/plugin/* ${to_delete} && \
+    mv ${to_delete}/{hive,blackhole,jmx,memory,postgresql,tpcds,tpch} ${WORK_DIR}/trino-server-${TRINO_VERSION}/plugin/. && \
+    rm -rf ${to_delete}
+###########################
 
 # Final container image:
 FROM registry.access.redhat.com/ubi8/ubi:${UBI_VERSION}
@@ -79,16 +88,6 @@ COPY --from=downloader /tmp/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar /
 COPY --from=downloader /tmp/trino-cli-${TRINO_VERSION}-executable.jar /usr/bin/trino
 COPY --from=downloader --chown=trino:trino /tmp/trino-server-${TRINO_VERSION} /usr/lib/trino
 COPY --chown=trino:trino default/etc $TRINO_HOME
-
-###########################
-# Remove all unused plugins
-# Only hive, blackhole, jmx, memory, postgresql, tpcds, and tpch are configured plugins.
-ARG to_delete="/TO_DELETE"
-RUN mkdir ${to_delete} && \
-    mv /usr/lib/trino/plugin/* ${to_delete} && \
-    mv ${to_delete}/{hive,blackhole,jmx,memory,postgresql,tpcds,tpch} /usr/lib/trino/plugin/. && \
-    rm -rf ${to_delete}
-###########################
 
 EXPOSE 10000
 USER trino:trino
