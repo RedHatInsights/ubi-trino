@@ -158,6 +158,7 @@ objects:
       -XX:-UseBiasedLocking
       -XX:+UseG1GC
       -XX:G1HeapRegionSize=32M
+      -XX:G1ReservePercent=20
       -XX:+ExplicitGCInvokesConcurrent
       -XX:+ExitOnOutOfMemoryError
       -XX:ErrorFile=/data/trino/logs/java_error%p.log
