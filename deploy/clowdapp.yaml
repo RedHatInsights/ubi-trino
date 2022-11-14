@@ -296,6 +296,7 @@ objects:
       hive.config.resources=/etc/trino/hadoop-config/core-site.xml
       hive.hdfs.authentication.type=NONE
       hive.metastore.authentication.type=NONE
+      hive.metastore-timeout=${METASTORE_TIMEOUT}
       hive.metastore.uri=thrift://hive-metastore:10000
       hive.parquet.use-column-names=true
       hive.s3.path-style-access=true
@@ -677,6 +678,10 @@ parameters:
   required: true
 
 # Trino Hive config
+- description: Timeout for Hive metastore requests
+  displayName: hive.metastore-timeout
+  name: METASTORE_TIMEOUT
+  value: '300'
 - description: Whether to use SSE encryption
   displayName: hive.s3.sse.enabled
   name: S3_SSE_ENABLED
