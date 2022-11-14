@@ -681,7 +681,7 @@ parameters:
 - description: Timeout for Hive metastore requests
   displayName: hive.metastore-timeout
   name: METASTORE_TIMEOUT
-  value: '300'
+  value: '300s'
 - description: Whether to use SSE encryption
   displayName: hive.s3.sse.enabled
   name: S3_SSE_ENABLED
