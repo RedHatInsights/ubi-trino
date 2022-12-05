@@ -323,9 +323,6 @@ objects:
     envName: ${ENV_NAME}
     deployments:
     - name: coordinator
-      metadata:
-        annotations:
-          ignore-check.kube-linter.io/minimum-three-replicas: This deployment uses 1 pod as currently the coordinator is a singleton
       minReplicas: ${{COORDINATOR_REPLICAS}}
       webServices:
         public:
@@ -335,6 +332,9 @@ objects:
         metrics:
           enabled: true
       podSpec:
+        metadata:
+          annotations:
+            ignore-check.kube-linter.io/minimum-three-replicas: This deployment uses 1 pod as currently the coordinator is a singleton
         image: ${IMAGE}:${IMAGE_TAG}
         command:
           - /etc/trino/scripts/entrypoint.sh
