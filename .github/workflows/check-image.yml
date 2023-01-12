@@ -14,7 +14,7 @@ jobs:
         run: sudo apt-get install -y skopeo
       - name: Check change
         run: |
-          skopeo inspect "docker://$(grep -Po '(?<=FROM )([^"]+)' Dockerfile)" | grep -Po '(?<="Digest": ")([^"]+)' > .baseimagedigest
+          UBI_VERSION=8.6 skopeo inspect "docker://$(grep -Po '(?<=FROM )([^"]+)' Dockerfile)" | grep -Po '(?<="Digest": ")([^"]+)' > .baseimagedigest
           docker run --rm --entrypoint sh -u 0 quay.io/cloudservices/ubi-trino:latest -c \
             'yum upgrade -y --security > /dev/null; rpm -qa | sort | sha256sum' \
             >> .baseimagedigest
