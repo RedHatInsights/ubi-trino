@@ -26,6 +26,8 @@ Docker Image build from RHEL UBI base image
 9. Create a PR, this should execute a PR check script.
 10. If successful, get approval and merge.
 
+* Note: If the UBI image version is updated in the Dockerfile you must also update the `check-image.yml` workflow.
+
 # Utility Scripts
 
 * `check_upstream.sh` : Check the current version of trino set in the Dockerfile against release tags from the `trinodb/trino` repo.
