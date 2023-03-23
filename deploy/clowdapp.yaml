@@ -153,6 +153,8 @@ objects:
     name: trino-config-${CONFIGMAP_HASH}
     labels:
       app: trino
+    annotations:
+      qontract.recycle: true
   data:
     jvm.config: |-
       -server
