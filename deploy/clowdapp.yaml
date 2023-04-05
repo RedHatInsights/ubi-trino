@@ -288,7 +288,7 @@ objects:
           name: 'trino_heartbeatdetector_activecount'
           type: GAUGE
     hive.properties: |-
-      connector.name=hive-hadoop2
+      connector.name=hive
       hive.allow-add-column=true
       hive.allow-drop-column=true
       hive.allow-rename-column=true
