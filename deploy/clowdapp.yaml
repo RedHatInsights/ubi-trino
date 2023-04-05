@@ -303,6 +303,7 @@ objects:
       hive.max-partitions-per-scan=${HIVE_PARTITION_LIMIT}
       hive.metastore.uri=thrift://hive-metastore:10000
       hive.parquet.use-column-names=true
+      parquet.optimized-reader.enabled=false
       hive.s3.path-style-access=true
       hive.s3.sse.enabled=${S3_SSE_ENABLED}
       hive.s3select-pushdown.enabled=${S3_SELECT_PUSHDOWN_ENABLED}
