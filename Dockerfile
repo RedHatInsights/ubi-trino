@@ -1,8 +1,7 @@
 ARG PROMETHEUS_VERSION=0.17.0
 ARG TRINO_VERSION=418
-ARG UBI_VERSION=8.8
 
-FROM registry.access.redhat.com/ubi8/ubi:${UBI_VERSION} as downloader
+FROM registry.access.redhat.com/ubi8/ubi:latest as downloader
 
 ARG PROMETHEUS_VERSION
 ARG TRINO_VERSION
@@ -36,7 +35,7 @@ RUN mkdir ${to_delete} && \
 ###########################
 
 # Final container image:
-FROM registry.access.redhat.com/ubi8/ubi:${UBI_VERSION}
+FROM registry.access.redhat.com/ubi8/ubi:latest
 
 LABEL io.k8s.display-name="OpenShift Trino" \
       io.k8s.description="This is an image used by Cost Management to install and run Trino." \
