@@ -1,5 +1,5 @@
-ARG PROMETHEUS_VERSION=0.17.0
-ARG TRINO_VERSION=418
+ARG PROMETHEUS_VERSION=0.20.0
+ARG TRINO_VERSION=427
 
 FROM registry.access.redhat.com/ubi8/ubi:latest as downloader
 
@@ -10,10 +10,7 @@ ARG CLIENT_LOCATION="https://repo1.maven.org/maven2/io/trino/trino-cli/${TRINO_V
 ARG PROMETHEUS_JMX_EXPORTER_LOCATION="https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/${PROMETHEUS_VERSION}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar"
 ARG WORK_DIR="/tmp"
 
-RUN \
-curl -o ${WORK_DIR}/trino-server-${TRINO_VERSION}.tar.gz ${SERVER_LOCATION} && \
-tar -C ${WORK_DIR} -xzf ${WORK_DIR}/trino-server-${TRINO_VERSION}.tar.gz && \
-rm ${WORK_DIR}/trino-server-${TRINO_VERSION}.tar.gz
+RUN curl -L ${SERVER_LOCATION} | tar -zxf - -C ${WORK_DIR}
 RUN \
 curl -o ${WORK_DIR}/trino-cli-${TRINO_VERSION}-executable.jar ${CLIENT_LOCATION} && \
 chmod +x ${WORK_DIR}/trino-cli-${TRINO_VERSION}-executable.jar
@@ -52,7 +49,7 @@ RUN \
     yum install -y https://cdn.azul.com/zulu/bin/zulu-repo-1.0.0-1.noarch.rpm && \
     set -xeu && \
     INSTALL_PKGS="zulu17-jdk less jq" && \
-    yum install -y $INSTALL_PKGS --setopt=tsflags=nodocs && \
+    yum install -y $INSTALL_PKGS --setopt=tsflags=nodocs --setopt=install_weak_deps=False && \
     yum clean all && \
     rm -rf /var/cache/yum
 
