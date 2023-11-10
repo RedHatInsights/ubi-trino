@@ -522,7 +522,8 @@ objects:
         lifecycle:
           preStop:
             exec:
-              command: /usr/lib/trino/warm-shutdown
+              command:
+                - /usr/lib/trino/warm-shutdown
         volumes:
           - name: trino-scripts
             configMap:
