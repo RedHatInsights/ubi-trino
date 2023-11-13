@@ -148,6 +148,8 @@ objects:
     labels:
       app: trino
   data:
+    access-control.properties: |-
+      access-control.name=allow-all
     jvm.config: |-
       -server
       -Xmx${MAX_HEAP_SIZE}
