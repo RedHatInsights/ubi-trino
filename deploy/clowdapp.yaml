@@ -138,9 +138,6 @@ objects:
           fi
       fi
       exec "$@"
-    warm-shutdown.sh: |
-      #!/bin/bash
-      curl -v -X PUT -d '"SHUTTING_DOWN"' -H 'Content-type: application/json' -H 'X-Trino-User: trino'  http://localhost:8080/v1/info/state
 - apiVersion: v1
   kind: ConfigMap
   metadata:
