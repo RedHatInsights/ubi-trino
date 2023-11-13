@@ -4,3 +4,5 @@ curl -v -X PUT -d '"SHUTTING_DOWN"' \
     -H 'Content-type: application/json' \
     -H 'X-Trino-User: trino'  \
     http://"$TRINO_WORKER_SERVICE_HOST":"$TRINO_WORKER_SERVICE_PORT"/v1/info/state
+
+sleep 500
