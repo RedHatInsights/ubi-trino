@@ -1,6 +1,8 @@
 #!/bin/bash
 
+# http://"$TRINO_WORKER_SERVICE_HOST":"$TRINO_WORKER_SERVICE_PORT"/v1/info/state
+
 curl -v -X PUT -d '"SHUTTING_DOWN"' \
     -H 'Content-type: application/json' \
     -H 'X-Trino-User: trino'  \
-    http://"$TRINO_WORKER_SERVICE_HOST":"$TRINO_WORKER_SERVICE_PORT"/v1/info/state
+    http://localhost:10000/v1/info/state
