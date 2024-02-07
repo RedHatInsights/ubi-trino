@@ -3,11 +3,11 @@
 curl -v -X PUT -d '"SHUTTING_DOWN"' \
     -H 'Content-type: application/json' \
     -H 'X-Trino-User: trino'  \
-    http://"$TRINO_WORKER_SERVICE_HOST":"$TRINO_WORKER_SERVICE_PORT"/v1/info/state
+    http://"$HOSTNAME":"$TRINO_WORKER_SERVICE_PORT"/v1/info/state
 
 # poll until the endpoint does not return
 while true; do
-    response_code=$(curl -s -o /dev/null -w "%{http_code}" http://"$TRINO_WORKER_SERVICE_HOST":"$TRINO_WORKER_SERVICE_PORT"/v1/info/state)
+    response_code=$(curl -s -o /dev/null -w "%{http_code}" http://"$HOSTNAME":"$TRINO_WORKER_SERVICE_PORT"/v1/info/state)
 
     if [ $response_code -ne 200 ]; then
         break
