@@ -150,8 +150,8 @@ objects:
     jvm.config: |-
       -server
       -Xmx${MAX_HEAP_SIZE}
+      -XX:InitialRAMPercentage=80
       -XX:+UseContainerSupport
-      -XX:-UseBiasedLocking
       -XX:+UseG1GC
       -XX:G1HeapRegionSize=32M
       -XX:G1ReservePercent=20
@@ -171,6 +171,11 @@ objects:
       -verbose:gc
       -Xlog:gc*:/data/trino/logs/gc.log
       -javaagent:/usr/lib/trino/jmx_exporter.jar=9000:/etc/trino/catalog/config.yaml
+      # Reduce starvation of threads by GClocker, recommend to set about the number of cpu cores (JDK-8192647)
+      -XX:+UnlockDiagnosticVMOptions
+      -XX:GCLockerRetryAllocationCount=8
+      # Allow loading dynamic agent used by JOL
+      -XX:+EnableDynamicAgentLoading
     log.properties: |-
       io.trino=INFO
     node.properties: |-
