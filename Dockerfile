@@ -1,5 +1,5 @@
 ARG PROMETHEUS_VERSION=0.20.0
-ARG TRINO_VERSION=418
+ARG TRINO_VERSION=443
 
 FROM registry.access.redhat.com/ubi8/ubi:latest as downloader
 
