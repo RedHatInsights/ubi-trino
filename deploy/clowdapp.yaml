@@ -146,7 +146,8 @@ objects:
       app: trino
   data:
     access-control.properties: |-
-      access-control.name=allow-all
+      access-control.name=file
+      security.config-file=/etc/trino/rules.json
     jvm.config: |-
       -server
       -Xmx${MAX_HEAP_SIZE}
@@ -200,6 +201,56 @@ objects:
       query.max-memory=${QUERY_MAX_MEMORY}
       query.max-total-memory=${QUERY_MAX_TOTAL_MEMORY}
       memory.heap-headroom-per-node=${MEMORY_HEAP_HEADROOM_PER_NODE}
+    rules.json: |-
+      {
+        "catalogs": [
+          {
+            "user": "readonly",
+            "catalog": "hive|postgres",
+            "allow": "read-only"
+          },
+          {
+            "user": "admin",
+            "catalog": ".*",
+            "allow": "all"
+          }
+        ],
+        "system_session_properties": [
+          {
+            "role": "admin",
+            "allow": true
+          },
+          {
+            "user": "readonly",
+            "allow": false
+          }
+        ],
+        "catalog_session_properties": [
+          {
+            "role": "admin",
+            "allow": true
+          },
+          {
+            "user": "readonly",
+            "allow": false
+          }
+        ],
+        "system_information": [
+          {
+            "role": "admin",
+            "allow": [
+              "read",
+              "write"
+            ]
+          },
+          {
+            "user": "readonly",
+            "allow": [
+              "read"
+            ]
+          }
+        ]
+      }
 - apiVersion: v1
   kind: ConfigMap
   metadata:
