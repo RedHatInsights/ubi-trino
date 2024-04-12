@@ -2,7 +2,7 @@
 
 curl -v -X PUT -d '"SHUTTING_DOWN"' \
     -H 'Content-type: application/json' \
-    -H 'X-Trino-User: trino'  \
+    -H 'X-Trino-User: admin'  \
     http://"$HOSTNAME":"$TRINO_WORKER_SERVICE_PORT"/v1/info/state
 
 # poll until the endpoint does not return
