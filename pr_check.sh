@@ -8,13 +8,13 @@ set -ex
 # Options that must be configured by app owner
 # --------------------------------------------
 APP_NAME="hccm"  # name of app-sre "application" folder this component lives in
-COMPONENT_NAME="presto"  # name of app-sre "resourceTemplate" in deploy.yaml for this component
+COMPONENT_NAME="trino"  # name of app-sre "resourceTemplate" in deploy.yaml for this component
 IMAGE_REPO="quay.io"
 ORG="cloudservices"
 APP="ubi-trino"
 IMAGE="${IMAGE_REPO}/${ORG}/${APP}"
-COMPONENTS="hive-metastore koku presto"  # specific components to deploy (optional, default: all)
-COMPONENTS_W_RESOURCES="hive-metastore koku presto"  # components which should preserve resource settings (optional, default: none)
+COMPONENTS="hive-metastore koku trino"  # specific components to deploy (optional, default: all)
+COMPONENTS_W_RESOURCES="hive-metastore koku trino"  # components which should preserve resource settings (optional, default: none)
 CHANGED_DIR="$WORKSPACE/files_changed"
 
 mkdir -p $CHANGED_DIR
