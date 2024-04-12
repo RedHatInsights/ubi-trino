@@ -151,8 +151,8 @@ objects:
     jvm.config: |-
       -server
       -Xmx${MAX_HEAP_SIZE}
+      -XX:InitialRAMPercentage=80
       -XX:+UseContainerSupport
-      -XX:-UseBiasedLocking
       -XX:+UseG1GC
       -XX:G1HeapRegionSize=32M
       -XX:G1ReservePercent=20
@@ -172,6 +172,11 @@ objects:
       -verbose:gc
       -Xlog:gc*:/data/trino/logs/gc.log
       -javaagent:/usr/lib/trino/jmx_exporter.jar=9000:/etc/trino/catalog/config.yaml
+      # Reduce starvation of threads by GClocker, recommend to set about the number of cpu cores (JDK-8192647)
+      -XX:+UnlockDiagnosticVMOptions
+      -XX:GCLockerRetryAllocationCount=8
+      # Allow loading dynamic agent used by JOL
+      -XX:+EnableDynamicAgentLoading
     log.properties: |-
       io.trino=INFO
     node.properties: |-
@@ -334,24 +339,17 @@ objects:
           type: GAUGE
     hive.properties: |-
       connector.name=hive
-      hive.allow-add-column=true
-      hive.allow-drop-column=true
-      hive.allow-rename-column=true
-      hive.allow-drop-table=true
-      hive.allow-rename-table=true
       hive.collect-column-statistics-on-write=true
       hive.compression-codec=SNAPPY
       hive.config.resources=/etc/trino/hadoop-config/core-site.xml
       hive.hdfs.authentication.type=NONE
       hive.metastore.authentication.type=NONE
-      hive.metastore-timeout=${METASTORE_TIMEOUT}
+      hive.metastore.thrift.client.connect-timeout=${METASTORE_TIMEOUT}
       hive.max-partitions-per-scan=${HIVE_PARTITION_LIMIT}
       hive.metastore.uri=thrift://hive-metastore:10000
       hive.parquet.use-column-names=true
-      parquet.optimized-reader.enabled=false
       hive.s3.path-style-access=true
       hive.s3.sse.enabled=${S3_SSE_ENABLED}
-      hive.s3select-pushdown.enabled=${S3_SELECT_PUSHDOWN_ENABLED}
       hive.storage-format=Parquet
     blackhole.propeties: |-
       connector.name=blackhole
@@ -737,10 +735,6 @@ parameters:
 - description: Whether to use SSE encryption
   displayName: hive.s3.sse.enabled
   name: S3_SSE_ENABLED
-  value: 'True'
-- description: Whether to use S3 Pushdown for queries
-  displayName: hive.s3select-pushdown.enabled
-  name: S3_SELECT_PUSHDOWN_ENABLED
   value: 'True'
 
 # Trino Postgres config

@@ -1,5 +1,5 @@
 ARG PROMETHEUS_VERSION=0.20.0
-ARG TRINO_VERSION=418
+ARG TRINO_VERSION=443
 
 FROM registry.access.redhat.com/ubi8/ubi:latest as downloader
 
@@ -45,10 +45,10 @@ RUN yum -y update && yum clean all
 RUN \
     # symlink the python3 installed in the container
     ln -s /usr/libexec/platform-python /usr/bin/python && \
-    # add the Azul RPM repository
+    # add the Azul RPM repository -> needs to match whatever trino requires
     yum install -y https://cdn.azul.com/zulu/bin/zulu-repo-1.0.0-1.noarch.rpm && \
     set -xeu && \
-    INSTALL_PKGS="zulu17-jre less jq" && \
+    INSTALL_PKGS="zulu21-jre less jq" && \
     yum install -y $INSTALL_PKGS --setopt=tsflags=nodocs --setopt=install_weak_deps=False && \
     yum clean all && \
     rm -rf /var/cache/yum
@@ -60,7 +60,7 @@ RUN \
     mkdir -p /usr/lib/trino /data/trino/{data,logs,spill} && \
     chown -R "trino:trino" /usr/lib/trino /data/trino
 
-ENV JAVA_HOME=/usr/lib/jvm/zulu17 \
+ENV JAVA_HOME=/usr/lib/jvm/zulu21 \
     TRINO_HOME=/etc/trino \
     TRINO_HISTORY_FILE=/data/trino/.trino_history
 
