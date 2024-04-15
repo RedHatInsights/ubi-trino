@@ -222,7 +222,7 @@ objects:
         ],
         "system_session_properties": [
           {
-            "role": "admin",
+            "user": "admin",
             "allow": true
           },
           {
@@ -232,7 +232,7 @@ objects:
         ],
         "catalog_session_properties": [
           {
-            "role": "admin",
+            "user": "admin",
             "allow": true
           },
           {
@@ -242,7 +242,7 @@ objects:
         ],
         "system_information": [
           {
-            "role": "admin",
+            "user": "admin",
             "allow": [
               "read",
               "write"
