@@ -422,6 +422,8 @@ objects:
             value: ${MEMORY_HEAP_HEADROOM_PER_NODE}
           - name: MAX_HEAP_SIZE
             value: ${MAX_HEAP_SIZE}
+          - name: TRINO_HISTORY_FILE
+            value: ${TRINO_HISTORY_FILE}
         machinePool: ${MACHINE_POOL_OPTION}
         resources:
           limits:
@@ -540,6 +542,8 @@ objects:
             value: ${MEMORY_HEAP_HEADROOM_PER_NODE}
           - name: MAX_HEAP_SIZE
             value: ${MAX_HEAP_SIZE}
+          - name: TRINO_HISTORY_FILE
+            value: ${TRINO_HISTORY_FILE}
         machinePool: ${MACHINE_POOL_OPTION}
         resources:
           limits:
@@ -640,6 +644,8 @@ parameters:
   value: 'production'
 - name: MACHINE_POOL_OPTION
   value: ''
+- name: TRINO_HISTORY_FILE
+  value: /data/trino/data/.trino_history
 
 # Coordinator Params
 - description: Number of replicas for the coordinator
