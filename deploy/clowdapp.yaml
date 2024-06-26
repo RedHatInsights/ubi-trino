@@ -186,7 +186,7 @@ objects:
       coordinator=true
       spill-enabled=true
       spiller-spill-path=/data/trino/spill
-      node-scheduler.include-coordinator=true
+      node-scheduler.include-coordinator=false
       http-server.http.port=10000
       discovery.uri=http://trino-coordinator:10000
       query.max-memory-per-node=${QUERY_MAX_MEMORY_PER_NODE}
@@ -199,7 +199,7 @@ objects:
       coordinator=false
       spill-enabled=true
       spiller-spill-path=/data/trino/spill
-      node-scheduler.include-coordinator=true
+      node-scheduler.include-coordinator=false
       http-server.http.port=10000
       discovery.uri=http://trino-coordinator:10000
       query.max-memory-per-node=${QUERY_MAX_MEMORY_PER_NODE}
