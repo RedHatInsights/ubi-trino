@@ -354,7 +354,9 @@ objects:
       hive.hdfs.authentication.type=NONE
       hive.metastore.authentication.type=NONE
       hive.metastore.thrift.client.connect-timeout=${METASTORE_TIMEOUT}
+      hive.metastore.thrift.client.read-timeout=${METASTORE_READ_TIMEOUT}
       hive.max-partitions-per-scan=${HIVE_PARTITION_LIMIT}
+      hive.partition-statistics-sample-size=${HIVE_PARTITION_STATS_SAMPLE_SIZE}
       hive.metastore.uri=thrift://hive-metastore:10000
       hive.parquet.use-column-names=true
       hive.s3.path-style-access=true
@@ -739,10 +741,18 @@ parameters:
   required: true
 
 # Trino Hive config
-- description: Timeout for Hive metastore requests
-  displayName: hive.metastore-timeout
+- description: Socket connect timeout for metastore client
+  displayName: hive.metastore.thrift.client.connect-timeout
+  name: METASTORE_READ_TIMEOUT
+  value: '300s'
+- description: Socket read timeout for metastore client
+  displayName: hive.metastore.thrift.client.read-timeout
   name: METASTORE_TIMEOUT
   value: '300s'
+- description: Specifies the number of partitions to analyze when computing table statistics
+  displayName: hive.partition-statistics-sample-size
+  name: HIVE_PARTITION_STATS_SAMPLE_SIZE
+  value: '100'
 - description: Maximum number of partitions for a single table scan.
   displayName: hive.max-partitions-per-scan
   name: HIVE_PARTITION_LIMIT
