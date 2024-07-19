@@ -438,11 +438,11 @@ objects:
         machinePool: ${MACHINE_POOL_OPTION}
         resources:
           limits:
-            cpu: ${COORDINATOR_CPU_LIMIT}
-            memory: ${COORDINATOR_MEMORY_LIMIT}
+            cpu: ${CPU_LIMIT_COORDINATOR}
+            memory: ${MEMORY_LIMIT_COORDINATOR}
           requests:
-            cpu: ${COORDINATOR_CPU_REQUEST}
-            memory: ${COORDINATOR_MEMORY_REQUEST}
+            cpu: ${CPU_REQUEST_COORDINATOR}
+            memory: ${MEMORY_REQUEST_COORDINATOR}
         livenessProbe:
           httpGet:
             path: /v1/info
@@ -558,11 +558,11 @@ objects:
         machinePool: ${MACHINE_POOL_OPTION}
         resources:
           limits:
-            cpu: ${WORKER_CPU_LIMIT}
-            memory: ${WORKER_MEMORY_LIMIT}
+            cpu: ${CPU_LIMIT_WORKER}
+            memory: ${MEMORY_LIMIT_WORKER}
           requests:
-            cpu: ${WORKER_CPU_REQUEST}
-            memory: ${WORKER_MEMORY_REQUEST}
+            cpu: ${CPU_REQUEST_WORKER}
+            memory: ${MEMORY_REQUEST_WORKER}
         livenessProbe:
           httpGet:
             path: /v1/info
@@ -666,22 +666,22 @@ parameters:
   value: '1'
 - description: Initial amount of memory the Django container will request.
   displayName: Memory Request
-  name: COORDINATOR_MEMORY_REQUEST
+  name: MEMORY_REQUEST_COORDINATOR
   required: true
   value: 2Gi
 - description: Maximum amount of memory the Django container can use.
   displayName: Memory Limit
-  name: COORDINATOR_MEMORY_LIMIT
+  name: MEMORY_LIMIT_COORDINATOR
   required: true
   value: 4Gi
 - description: Initial amount of cpu the Django container will request.
   displayName: CPU Request
-  name: COORDINATOR_CPU_REQUEST
+  name: CPU_REQUEST_COORDINATOR
   required: true
   value: 250m
 - description: Maximum amount of cpu the Django container can use.
   displayName: CPU Limit
-  name: COORDINATOR_CPU_LIMIT
+  name: CPU_LIMIT_COORDINATOR
   required: true
   value: 500m
 
@@ -693,22 +693,22 @@ parameters:
   value: '2'
 - description: Initial amount of memory the Django container will request.
   displayName: Memory Request
-  name: WORKER_MEMORY_REQUEST
+  name: MEMORY_REQUEST_WORKER
   required: true
   value: 2Gi
 - description: Maximum amount of memory the Django container can use.
   displayName: Memory Limit
-  name: WORKER_MEMORY_LIMIT
+  name: MEMORY_LIMIT_WORKER
   required: true
   value: 4Gi
 - description: Initial amount of cpu the Django container will request.
   displayName: CPU Request
-  name: WORKER_CPU_REQUEST
+  name: CPU_REQUEST_WORKER
   required: true
   value: 250m
 - description: Maximum amount of cpu the Django container can use.
   displayName: CPU Limit
-  name: WORKER_CPU_LIMIT
+  name: CPU_LIMIT_WORKER
   required: true
   value: 500m
 
