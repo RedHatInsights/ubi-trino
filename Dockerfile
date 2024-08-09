@@ -1,5 +1,5 @@
 ARG PROMETHEUS_VERSION=0.20.0
-ARG TRINO_VERSION=443
+ARG TRINO_VERSION=453
 
 FROM registry.access.redhat.com/ubi8/ubi:latest as downloader
 
@@ -48,7 +48,7 @@ RUN \
     # add the Azul RPM repository -> needs to match whatever trino requires
     yum install -y https://cdn.azul.com/zulu/bin/zulu-repo-1.0.0-1.noarch.rpm && \
     set -xeu && \
-    INSTALL_PKGS="zulu21-jre less jq" && \
+    INSTALL_PKGS="zulu22-jre less jq" && \
     yum install -y $INSTALL_PKGS --setopt=tsflags=nodocs --setopt=install_weak_deps=False && \
     yum clean all && \
     rm -rf /var/cache/yum
@@ -60,7 +60,7 @@ RUN \
     mkdir -p /usr/lib/trino /data/trino/{data,logs,spill} && \
     chown -R "trino:trino" /usr/lib/trino /data/trino
 
-ENV JAVA_HOME=/usr/lib/jvm/zulu21 \
+ENV JAVA_HOME=/usr/lib/jvm/zulu22 \
     TRINO_HOME=/etc/trino \
     TRINO_HISTORY_FILE=/data/trino/.trino_history
 

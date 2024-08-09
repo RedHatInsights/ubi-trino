@@ -165,7 +165,7 @@ objects:
       -XX:ReservedCodeCacheSize=512M
       -XX:PerMethodRecompilationCutoff=10000
       -XX:PerBytecodeRecompilationCutoff=10000
-      -XshowSettings:VM
+      -XshowSettings:vm
       -Dfile.encoding=UTF-8
       -Djdk.attach.allowAttachSelf=true
       -Djdk.nio.maxCachedBufferSize=2000000
@@ -177,6 +177,7 @@ objects:
       -XX:GCLockerRetryAllocationCount=8
       # Allow loading dynamic agent used by JOL
       -XX:+EnableDynamicAgentLoading
+      -XX:G1NumCollectionsKeepPinned=10000000
     log.properties: |-
       io.trino=INFO
     node.properties: |-
