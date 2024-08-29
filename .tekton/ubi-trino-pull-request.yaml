@@ -78,9 +78,6 @@ spec:
 
             - name: kind
               value: task
-        workspaces:
-          - name: workspace
-            workspace: workspace
 
     params:
       - description: Source Repository URL
@@ -495,45 +492,14 @@ spec:
             - name: kind
               value: task
 
-      - name: push-dockerfile
-        params:
-          - name: IMAGE
-            value: $(tasks.build-image-manifest.results.IMAGE_URL)
-
-          - name: IMAGE_DIGEST
-            value: $(tasks.build-image-manifest.results.IMAGE_DIGEST)
-
-          - name: DOCKERFILE
-            value: $(params.dockerfile)
-
-          - name: CONTEXT
-            value: $(params.path-context)
-        runAfter:
-          - build-image-manifest
-        taskRef:
-          resolver: bundles
-          params:
-            - name: name
-              value: push-dockerfile
-
-            - name: bundle
-              value: quay.io/konflux-ci/tekton-catalog/task-push-dockerfile:0.1@sha256:92d63edd09636f97961ca18fac14b67935179d2c14b4a4d5f8087c614e8c2bd9
-
-            - name: kind
-              value: task
-        workspaces:
-          - name: workspace
-            workspace: workspace
-
     workspaces:
-      - name: workspace
       - name: git-auth
         optional: true
-      - name: netrc
-        optional: true
+
   taskRunTemplate: {}
   workspaces:
     - name: git-auth
       secret:
         secretName: '{{ git_auth_secret }}'
+
 status: {}
