@@ -15,6 +15,7 @@ metadata:
     pipelines.appstudio.openshift.io/type: build
   name: ubi-trino-on-pull-request
   namespace: cost-mgmt-dev-tenant
+
 spec:
   params:
     - name: git-url
@@ -29,6 +30,7 @@ spec:
       value: Dockerfile
     - name: path-context
       value: .
+
   pipelineSpec:
     finally:
       - name: show-sbom
@@ -44,6 +46,7 @@ spec:
             - name: kind
               value: task
           resolver: bundles
+
       - name: show-summary
         params:
           - name: pipelinerun-name
@@ -66,76 +69,96 @@ spec:
         workspaces:
           - name: workspace
             workspace: workspace
+
     params:
       - description: Source Repository URL
         name: git-url
         type: string
+
       - default: ""
         description: Revision of the Source Repository
         name: revision
         type: string
+
       - description: Fully Qualified Output Image
         name: output-image
         type: string
+
       - default: .
         description: Path to the source code of an application's component from where to build image.
         name: path-context
         type: string
+
       - default: Dockerfile
         description: Path to the Dockerfile inside the context specified by parameter path-context
         name: dockerfile
         type: string
+
       - default: "false"
         description: Force rebuild image
         name: rebuild
         type: string
+
       - default: "false"
         description: Skip checks against built image
         name: skip-checks
         type: string
+
       - default: "false"
         description: Execute the build with network isolation
         name: hermetic
         type: string
+
       - default: ""
         description: Build dependencies to be prefetched by Cachi2
         name: prefetch-input
         type: string
+
       - default: "false"
         description: Java build
         name: java
         type: string
+
       - default: ""
         description: Image tag expiration time, time values could be something like 1h, 2d, 3w for hours, days, and weeks, respectively.
         name: image-expires-after
+
       - default: "false"
         description: Build a source image.
         name: build-source-image
         type: string
+
       - default: []
         description: Array of --build-arg values ("arg=value" strings) for buildah
         name: build-args
         type: array
+
       - default: ""
         description: Path to a file with build arguments for buildah, see https://www.mankier.com/1/buildah-build#--build-arg-file
         name: build-args-file
         type: string
+
     results:
       - description: ""
         name: IMAGE_URL
         value: $(tasks.build-image-manifest.results.IMAGE_URL)
+
       - description: ""
         name: IMAGE_DIGEST
         value: $(tasks.build-image-manifest.results.IMAGE_DIGEST)
+
       - description: ""
         name: CHAINS-GIT_URL
         value: $(tasks.clone-repository.results.url)
+
       - description: ""
         name: CHAINS-GIT_COMMIT
         value: $(tasks.clone-repository.results.commit)
+
       - description: ""
         name: JAVA_COMMUNITY_DEPENDENCIES
         value: $(tasks.build-container.results.JAVA_COMMUNITY_DEPENDENCIES)
+
     tasks:
       - name: init
         params:
@@ -197,6 +220,8 @@ spec:
               value: quay.io/konflux-ci/tekton-catalog/task-prefetch-dependencies:0.1@sha256:058a59f72997c9cf1be20978eb6a145d8d4d436c6098f2460bd96766bb363b20
             - name: kind
               value: task
+            - name: SOURCE_ARTIFACT
+              value: $(tasks.clone-repository.results.SOURCE_ARTIFACT)
           resolver: bundles
         when:
           - input: $(params.prefetch-input)
@@ -219,7 +244,6 @@ spec:
               value:
                 - arm64
                 - amd64
-
         params:
           - name: IMAGE
             value: $(params.output-image)
@@ -242,10 +266,10 @@ spec:
             value: $(params.build-args-file)
           - name: PLATFORM
             value: $(matrix.params.arch)
-
+          - name: SOURCE_ARTIFACT
+            value: $(tasks.prefetch-dependencies.SOURCE_ARTIFACT)
         runAfter:
           - prefetch-dependencies
-
         taskRef:
           params:
             - name: name
@@ -255,13 +279,11 @@ spec:
             - name: kind
               value: task
           resolver: bundles
-
         when:
           - input: $(tasks.init.results.build)
             operator: in
             values:
               - "true"
-
         workspaces:
           - name: source
             workspace: workspace
@@ -306,6 +328,8 @@ spec:
               value: quay.io/konflux-ci/tekton-catalog/task-source-build:0.1@sha256:21cb5ebaff7a9216903cf78933dc4ec4dd6283a52636b16590a5f52ceb278269
             - name: kind
               value: task
+            - name: SOURCE_ARTIFACT
+              value: $(tasks.prefetch-dependencies.results.SOURCE_ARTIFACT)
           resolver: bundles
         when:
           - input: $(tasks.init.results.build)
@@ -403,6 +427,8 @@ spec:
               value: quay.io/konflux-ci/tekton-catalog/task-sast-snyk-check:0.2@sha256:82c42d27c9c59db6cf6c235e89f7b37f5cdfc75d0d361ca0ee91ae703ba72301
             - name: kind
               value: task
+            - name: SOURCE_ARTIFACT
+              value: $(tasks.prefetch-dependencies.results.SOURCE_ARTIFACT)
           resolver: bundles
         when:
           - input: $(params.skip-checks)
