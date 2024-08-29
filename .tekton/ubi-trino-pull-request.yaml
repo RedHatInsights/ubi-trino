@@ -227,13 +227,13 @@ spec:
             workspace: git-auth
 
       - name: build-container
-        displayName: build-container-$(params.arch)
+        displayName: build-container-$(params.PLATFORM)
         matrix:
           params:
-            - name: arch
+            - name: PLATFORM
               value:
-                - arm64
-                - amd64
+                - linux/arm64
+                - linux/amd64
         params:
           - name: IMAGE
             value: $(params.output-image)
@@ -262,9 +262,6 @@ spec:
 
           - name: BUILD_ARGS_FILE
             value: $(params.build-args-file)
-
-          - name: PLATFORM
-            value: $(matrix.params.arch)
 
           - name: SOURCE_ARTIFACT
             value: $(tasks.clone-repository.results.SOURCE_ARTIFACT)
