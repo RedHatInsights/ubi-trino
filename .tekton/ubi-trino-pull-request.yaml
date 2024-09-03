@@ -265,6 +265,9 @@ spec:
 
           - name: SOURCE_ARTIFACT
             value: $(tasks.clone-repository.results.SOURCE_ARTIFACT)
+
+          - name: IMAGE_APPEND_PLATFORM
+            value: "true"
         runAfter:
           - clone-repository
         taskRef:
@@ -286,11 +289,14 @@ spec:
 
       - name: build-image-manifest
         params:
+          - name: COMMIT_SHA
+            value: $(tasks.clone-repository.results.commit)
+
           - name: IMAGE
             value: $(params.output-image)
 
-          - name: COMMIT_SHA
-            value: $(tasks.clone-repository.results.commit)
+          - name: IMAGE_EXPIRES_AFTER
+            value: $(params.image-expires-after)
 
           - name: IMAGES
             value:
