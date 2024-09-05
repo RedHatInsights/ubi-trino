@@ -15,7 +15,7 @@ metadata:
     pipelines.appstudio.openshift.io/type: build
 
   namespace: cost-mgmt-dev-tenant
-  name: ubi-trino-main
+  name: ubi-trino-build
 
 spec:
   params:
@@ -39,9 +39,9 @@ spec:
 
   taskRunSpecs:
     - pipelineTaskName: clamav-scan
-      computResources:
+      computeResources:
         requests:
-          cpu: 1
+          cpu: 2
 
   timeouts:
     tasks: 1h
