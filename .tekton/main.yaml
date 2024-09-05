@@ -6,7 +6,7 @@ metadata:
     build.appstudio.redhat.com/commit_sha: '{{ revision }}'
     build.appstudio.redhat.com/target_branch: '{{ target_branch }}'
     pipelinesascode.tekton.dev/max-keep-runs: "3"
-    pipelinesascode.tekton.dev/on-cel-expression: event == "push" && target_branch == "main"
+    pipelinesascode.tekton.dev/on-cel-expression: event in ["pull_request", "push"] && target_branch == "main"
   creationTimestamp: null
 
   labels:
@@ -15,15 +15,15 @@ metadata:
     pipelines.appstudio.openshift.io/type: build
 
   namespace: cost-mgmt-dev-tenant
-  name: ubi-trino-on-push
+  name: ubi-trino-main
 
 spec:
   params:
     - name: git-url
-      value: '{{source_url}}'
+      value: '{{ source_url }}'
 
     - name: revision
-      value: '{{revision}}'
+      value: '{{ revision }}'
 
     - name: output-image
       value: quay.io/redhat-user-workloads/cost-mgmt-dev-tenant/ubi-trino:{{ revision }}
@@ -35,9 +35,17 @@ spec:
       value: .
 
   pipelineRef:
-    name: build-multiarch-pipeline
+    name: pipeline-build-multiarch
 
-  taskRunTemplate: {}
+  taskRunSpecs:
+    - pipelineTaskName: clamav-scan
+      computResources:
+        requests:
+          cpu: 1
+
+  timeouts:
+    tasks: 1h
+
   workspaces:
     - name: git-auth
       secret:

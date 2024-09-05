@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
-  name: build-multiarch-pipeline
+  name: pipeline-build-multiarch
 spec:
   tasks:
     - name: init
