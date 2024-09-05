@@ -10,9 +10,10 @@ set -ex
 APP_NAME="hccm"  # name of app-sre "application" folder this component lives in
 COMPONENT_NAME="trino"  # name of app-sre "resourceTemplate" in deploy.yaml for this component
 IMAGE_REPO="quay.io"
-ORG="cloudservices"
+ORG="redhat-services-prod"
+TENANT="cost-mgmt-dev-tenant"
 APP="ubi-trino"
-IMAGE="${IMAGE_REPO}/${ORG}/${APP}"
+IMAGE="${IMAGE_REPO}/${ORG}/${TENANT}/${APP}"
 EXTRA_DEPLOY_ARGS="--set-parameter trino/IMAGE=${IMAGE}"
 COMPONENTS="hive-metastore koku trino"  # specific components to deploy (optional, default: all)
 COMPONENTS_W_RESOURCES="hive-metastore koku trino"  # components which should preserve resource settings (optional, default: none)
