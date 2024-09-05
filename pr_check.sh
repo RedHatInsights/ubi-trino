@@ -12,8 +12,9 @@ COMPONENT_NAME="trino"  # name of app-sre "resourceTemplate" in deploy.yaml for 
 IMAGE_REPO="quay.io"
 ORG="cloudservices"
 APP="ubi-trino"
+HIVE_APP="ubi-hive"
 IMAGE="${IMAGE_REPO}/${ORG}/${APP}"
-EXTRA_DEPLOY_ARGS="--set-parameter trino/IMAGE=${IMAGE}"
+EXTRA_DEPLOY_ARGS="--set-parameter trino/IMAGE=${IMAGE} --set-parameter hive/IMAGE=${IMAGE_REPO}/${ORG}/${HIVE_APP}"
 COMPONENTS="hive-metastore koku trino"  # specific components to deploy (optional, default: all)
 COMPONENTS_W_RESOURCES="hive-metastore koku trino"  # components which should preserve resource settings (optional, default: none)
 CHANGED_DIR="$WORKSPACE/files_changed"
