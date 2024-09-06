@@ -10,7 +10,7 @@ set -ex
 APP_NAME="hccm"  # name of app-sre "application" folder this component lives in
 COMPONENT_NAME="trino"  # name of app-sre "resourceTemplate" in deploy.yaml for this component
 IMAGE_REPO="quay.io"
-ORG="redhat-services-prod"
+ORG="redhat-user-workloads"
 TENANT="cost-mgmt-dev-tenant"
 APP="ubi-trino"
 IMAGE="${IMAGE_REPO}/${ORG}/${TENANT}/${APP}"
@@ -38,7 +38,7 @@ if check_for_file_changes 'default|bin|Dockerfile|image_build_num.txt'
 then
     source $CICD_ROOT/build.sh
 else
-    IMAGE_TAG=$(git log --no-merges --format=%h --max-count=1)
+    IMAGE_TAG=$(git log --no-merges --format=%H --max-count=1)
 fi
 
 # source $CICD_ROOT/_common_deploy_logic.sh
