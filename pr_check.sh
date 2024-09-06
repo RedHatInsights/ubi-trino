@@ -38,7 +38,7 @@ if check_for_file_changes 'default|bin|Dockerfile|image_build_num.txt'
 then
     source $CICD_ROOT/build.sh
 else
-    IMAGE_TAG=$(./get_image_tag.sh)
+    IMAGE_TAG=$(git log --no-merges --format=%h --max-count=1)
 fi
 
 # source $CICD_ROOT/_common_deploy_logic.sh
