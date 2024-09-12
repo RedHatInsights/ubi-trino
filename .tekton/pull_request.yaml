@@ -6,7 +6,7 @@ metadata:
     build.appstudio.redhat.com/commit_sha: '{{ revision }}'
     build.appstudio.redhat.com/target_branch: '{{ target_branch }}'
     pipelinesascode.tekton.dev/max-keep-runs: "3"
-    pipelinesascode.tekton.dev/on-cel-expression: event in ["pull_request", "push"] && target_branch == "main"
+    pipelinesascode.tekton.dev/on-cel-expression: event == "pull_request" && target_branch == "main"
   creationTimestamp: null
 
   labels:
@@ -15,7 +15,7 @@ metadata:
     pipelines.appstudio.openshift.io/type: build
 
   namespace: cost-mgmt-dev-tenant
-  name: ubi-trino-build
+  name: ubi-trino-pr
 
 spec:
   params:
@@ -26,7 +26,7 @@ spec:
       value: '{{ revision }}'
 
     - name: output-image
-      value: quay.io/redhat-user-workloads/cost-mgmt-dev-tenant/ubi-trino:{{ revision }}
+      value: quay.io/redhat-user-workloads/cost-mgmt-dev-tenant/ubi-trino:pr-{{ pull_request_number }}
 
     - name: dockerfile
       value: Dockerfile
@@ -34,18 +34,26 @@ spec:
     - name: path-context
       value: .
 
+    - name: image-expires-after
+      value: 5d
+
+    - name: skip-malware-check
+      value: "true"
+
   pipelineRef:
     name: pipeline-build-multiarch
 
   taskRunSpecs:
     - pipelineTaskName: clamav-scan
-      computeResources:
-        requests:
-          cpu: 2
-          memory: 3Gi
+      stepOverrides:
+        - name: extract-and-scan-image
+          computeResources:
+            requests:
+              cpu: 1500m
+              memory: 4Gi
 
   timeouts:
-    tasks: 1h
+    tasks: 2h
 
   workspaces:
     - name: git-auth

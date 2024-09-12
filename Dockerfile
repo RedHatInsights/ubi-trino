@@ -34,11 +34,14 @@ RUN mkdir ${to_delete} && \
 # Final container image:
 FROM registry.access.redhat.com/ubi9/ubi:latest
 
-LABEL io.k8s.display-name="OpenShift Trino" \
-      io.k8s.description="This is an image used by Cost Management to install and run Trino." \
-      summary="This is an image used by Cost Management to install and run Trino." \
-      io.openshift.tags="openshift" \
-      maintainer="<cost-mgmt@redhat.com>"
+ARG VERSION
+
+LABEL io.k8s.display-name="OpenShift Trino"
+LABEL io.k8s.description="This is an image used by Cost Management to install and run Trino."
+LABEL summary="This is an image used by Cost Management to install and run Trino."
+LABEL io.openshift.tags="openshift"
+LABEL maintainer="<cost-mgmt@redhat.com>"
+LABEL version=${VERSION}
 
 RUN yum -y update && yum clean all
 

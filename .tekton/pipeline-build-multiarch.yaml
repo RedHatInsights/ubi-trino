@@ -14,7 +14,6 @@ spec:
 
         - name: skip-checks
           value: $(params.skip-checks)
-
       taskRef:
         resolver: bundles
         params:
@@ -40,10 +39,8 @@ spec:
 
         - name: ociArtifactExpiresAfter
           value: $(params.image-expires-after)
-
       runAfter:
         - init
-
       taskRef:
         resolver: bundles
         params:
@@ -55,13 +52,11 @@ spec:
 
           - name: kind
             value: task
-
       when:
         - input: $(tasks.init.results.build)
           operator: in
           values:
             - "true"
-
       workspaces:
         - name: basic-auth
           workspace: git-auth
@@ -79,10 +74,8 @@ spec:
 
         - name: ociArtifactExpiresAfter
           value: $(params.image-expires-after)
-
       runAfter:
         - clone-repository
-
       taskRef:
         resolver: bundles
         params:
@@ -94,7 +87,6 @@ spec:
 
           - name: kind
             value: task
-
       workspaces:
         - name: git-basic-auth
           workspace: git-auth
@@ -102,14 +94,20 @@ spec:
         - name: netrc
           workspace: netrc
 
+    - name: get-version
+      params:
+        - name: source_artifact
+          value: $(tasks.clone-repository.results.SOURCE_ARTIFACT)
+      taskRef:
+        name: get-version
+
     - name: build-image
-      displayName: build-image-${params.PLATFORM}
+      displayName: "build-image-$(params.PLATFORM)"
       matrix:
         params:
           - name: PLATFORM
             value:
               - $(params.build-platforms)
-
       params:
         - name: IMAGE
           value: $(params.output-image)
@@ -135,6 +133,7 @@ spec:
         - name: BUILD_ARGS
           value:
             - $(params.build-args[*])
+            - VERSION=$(tasks.get-version.results.version)
 
         - name: BUILD_ARGS_FILE
           value: $(params.build-args-file)
@@ -147,10 +146,8 @@ spec:
 
         - name: IMAGE_APPEND_PLATFORM
           value: "true"
-
       runAfter:
         - prefetch-dependencies
-
       taskRef:
         resolver: bundles
         params:
@@ -158,11 +155,10 @@ spec:
             value: buildah-remote-oci-ta
 
           - name: bundle
-            value: quay.io/konflux-ci/tekton-catalog/task-buildah-remote-oci-ta:0.2@sha256:3860f6c00ca52bca35a7a46e7e40a9c8e6a83d0123a2219b8d7f9f2e00eddf32
+            value: quay.io/konflux-ci/tekton-catalog/task-buildah-remote-oci-ta:0.2@sha256:50f7af0eafcd38919aa217b32b2bffffc04629b50dc1fe51b5f2215934eb6344
 
           - name: kind
             value: task
-
       when:
         - input: $(tasks.init.results.build)
           operator: in
@@ -186,10 +182,8 @@ spec:
         - name: IMAGES
           value:
             - $(tasks.build-image.results.IMAGE_REF[*])
-
       runAfter:
         - build-image
-
       taskRef:
         resolver: bundles
         params:
@@ -201,7 +195,6 @@ spec:
 
           - name: kind
             value: task
-
       when:
         - input: $(tasks.init.results.build)
           operator: in
@@ -215,10 +208,8 @@ spec:
 
         - name: IMAGE_DIGEST
           value: $(tasks.build-image-manifest.results.IMAGE_DIGEST)
-
       runAfter:
         - build-image-manifest
-
       taskRef:
         resolver: bundles
         params:
@@ -230,7 +221,6 @@ spec:
 
           - name: kind
             value: task
-
       when:
         - input: $(params.skip-checks)
           operator: in
@@ -244,10 +234,8 @@ spec:
 
         - name: image-url
           value: $(tasks.build-image-manifest.results.IMAGE_URL)
-
       runAfter:
         - build-image-manifest
-
       taskRef:
         resolver: bundles
         params:
@@ -259,7 +247,6 @@ spec:
 
           - name: kind
             value: task
-
       when:
         - input: $(params.skip-checks)
           operator: in
@@ -270,10 +257,8 @@ spec:
       params:
         - name: image-url
           value: $(tasks.build-image-manifest.results.IMAGE_URL)
-
       runAfter:
         - build-image-manifest
-
       taskRef:
         resolver: bundles
         params:
@@ -285,7 +270,6 @@ spec:
 
           - name: kind
             value: task
-
       when:
         - input: $(params.skip-checks)
           operator: in
@@ -305,10 +289,8 @@ spec:
 
         - name: CACHI2_ARTIFACT
           value: $(tasks.prefetch-dependencies.results.CACHI2_ARTIFACT)
-
       runAfter:
         - build-image-manifest
-
       taskRef:
         resolver: bundles
         params:
@@ -320,7 +302,6 @@ spec:
 
           - name: kind
             value: task
-
       when:
         - input: $(params.skip-checks)
           operator: in
@@ -334,10 +315,8 @@ spec:
 
         - name: image-url
           value: $(tasks.build-image-manifest.results.IMAGE_URL)
-
       runAfter:
         - build-image-manifest
-
       taskRef:
         resolver: bundles
         params:
@@ -349,9 +328,8 @@ spec:
 
           - name: kind
             value: task
-
       when:
-        - input: $(params.skip-checks)
+        - input: $(params.skip-malware-check)
           operator: in
           values:
             - "false"
@@ -363,7 +341,6 @@ spec:
 
       runAfter:
         - build-image-manifest
-
       taskRef:
         resolver: bundles
         params:
@@ -375,7 +352,6 @@ spec:
 
           - name: kind
             value: task
-
     - name: push-dockerfile
       params:
         - name: IMAGE
@@ -392,10 +368,8 @@ spec:
 
         - name: SOURCE_ARTIFACT
           value: $(tasks.prefetch-dependencies.results.SOURCE_ARTIFACT)
-
       runAfter:
         - build-image-manifest
-
       taskRef:
         resolver: bundles
         params:
@@ -439,6 +413,11 @@ spec:
 
     - name: skip-checks
       description: Skip checks against built image
+      type: string
+      default: "false"
+
+    - name: skip-malware-check
+      description: Skip the malware check
       type: string
       default: "false"
 
@@ -513,7 +492,6 @@ spec:
       params:
         - name: IMAGE_URL
           value: $(tasks.build-image-manifest.results.IMAGE_URL)
-
       taskRef:
         resolver: bundles
         params:
