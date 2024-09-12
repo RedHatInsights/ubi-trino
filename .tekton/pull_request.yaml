@@ -37,9 +37,6 @@ spec:
     - name: image-expires-after
       value: 5d
 
-    - name: skip-malware-check
-      value: "true"
-
   pipelineRef:
     name: pipeline-build-multiarch
 
