@@ -329,10 +329,10 @@ spec:
           - name: kind
             value: task
       when:
-        - input: $(params.skip-malware-check)
+        - input: "{{ event_type }}"
           operator: in
           values:
-            - "false"
+            - "push"
 
     - name: apply-tags
       params:
@@ -413,11 +413,6 @@ spec:
 
     - name: skip-checks
       description: Skip checks against built image
-      type: string
-      default: "false"
-
-    - name: skip-malware-check
-      description: Skip the malware check
       type: string
       default: "false"
 
