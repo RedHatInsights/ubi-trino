@@ -339,6 +339,9 @@ spec:
         - name: IMAGE
           value: $(tasks.build-image-manifest.results.IMAGE_URL)
 
+        - name: ADDITIONAL_TAGS
+          value:
+            - $(params.tag-prefix)$(tasks.clone-repository.results.short-commit)
       runAfter:
         - build-image-manifest
       taskRef:
@@ -456,6 +459,11 @@ spec:
       default:
         - linux/x86_64
         - linux/arm64
+
+    - name: tag-prefix
+      description: Prefix added to additional tags
+      type: string
+      default: ""
 
   workspaces:
     - name: git-auth
