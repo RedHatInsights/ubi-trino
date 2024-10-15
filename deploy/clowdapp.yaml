@@ -363,8 +363,9 @@ objects:
       hive.metastore.uri=thrift://hive-metastore:10000
       hive.parquet.use-column-names=true
       hive.storage-format=Parquet
-      s3.path-style-access=true
       fs.native-s3.enabled=true
+      s3.path-style-access=true
+      s3.region=us-east-1
     blackhole.propeties: |-
       connector.name=blackhole
     jmx.properties: |-
