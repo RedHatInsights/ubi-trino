@@ -102,12 +102,6 @@ objects:
         echo "Adding $NODE_ID to $NODE_CONFIG"
         echo "$NODE_ID" >> "$NODE_CONFIG"
       fi
-      CORE_SITE=/hadoop-config/core-site.xml
-      mkdir -p ${TRINO_HOME}/hadoop-config
-      if [[ -f ${CORE_SITE} ]]; then
-        echo "Configuring core-site.xml"
-        cat ${CORE_SITE} | sed "s#XXX_S3ENDPOINT_XXX#${S3_BUCKET_NAME}/${S3_DATA_DIR}#" > ${TRINO_HOME}/hadoop-config/core-site.xml
-      fi
       # add AWS creds to hive catalog properties
       HIVE_CATALOG_CONFIG="${TRINO_HOME}/catalog/hive.properties"
       # ensure there's a newline between the last item in the config and what we add
@@ -353,8 +347,6 @@ objects:
       connector.name=hive
       hive.collect-column-statistics-on-write=true
       hive.compression-codec=SNAPPY
-      hive.config.resources=/etc/trino/hadoop-config/core-site.xml
-      hive.hdfs.authentication.type=NONE
       hive.metastore.authentication.type=NONE
       hive.metastore.thrift.client.connect-timeout=${METASTORE_TIMEOUT}
       hive.metastore.thrift.client.read-timeout=${METASTORE_READ_TIMEOUT}
@@ -487,9 +479,6 @@ objects:
             emptyDir: {}
           - name: trino-spill
             emptyDir: {}
-          - name: hadoop-config
-            configMap:
-              name: hadoop-clowder-config
         volumeMounts:
           - name: trino-etc
             mountPath: /etc/trino
@@ -505,8 +494,6 @@ objects:
             mountPath: /data/trino/logs
           - name: trino-spill
             mountPath: /data/trino/spill
-          - name: hadoop-config
-            mountPath: /etc/trino/hadoop-config
     - name: worker
       minReplicas: ${{WORKER_REPLICAS}}
       webServices:
@@ -613,9 +600,6 @@ objects:
             emptyDir: {}
           - name: trino-spill
             emptyDir: {}
-          - name: hadoop-config
-            configMap:
-              name: hadoop-clowder-config
         volumeMounts:
           - name: trino-etc
             mountPath: /etc/trino
@@ -631,8 +615,6 @@ objects:
             mountPath: /data/trino/logs
           - name: trino-spill
             mountPath: /data/trino/spill
-          - name: hadoop-config
-            mountPath: /etc/trino/hadoop-config
     objectStore:
     - ${S3_BUCKET_NAME}
     database:
