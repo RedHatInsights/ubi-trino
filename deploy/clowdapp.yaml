@@ -112,12 +112,14 @@ objects:
       HIVE_CATALOG_CONFIG="${TRINO_HOME}/catalog/hive.properties"
       # ensure there's a newline between the last item in the config and what we add
       echo "" >> $HIVE_CATALOG_CONFIG
-      if ! grep -q -F 'hive.s3.aws-access-key' "$HIVE_CATALOG_CONFIG"; then
-        echo "Adding hive.s3.aws-access-key and hive.s3.aws-secret-key to $HIVE_CATALOG_CONFIG"
-        echo "hive.s3.aws-access-key=$AWS_ACCESS_KEY_ID" >> "$HIVE_CATALOG_CONFIG"
-        echo "hive.s3.aws-secret-key=$AWS_SECRET_ACCESS_KEY" >> "$HIVE_CATALOG_CONFIG"
-        echo "hive.s3.endpoint=$S3_ENDPOINT" >> "$HIVE_CATALOG_CONFIG"
-        echo "hive.s3.ssl.enabled=$OBJECTSTORE_TLS" >> "$HIVE_CATALOG_CONFIG"
+      if ! grep -q -F 's3.aws-access-key' "$HIVE_CATALOG_CONFIG"; then
+        echo "Adding s3.aws-access-key and s3.aws-secret-key to $HIVE_CATALOG_CONFIG"
+        echo "s3.aws-access-key=$AWS_ACCESS_KEY_ID" >> "$HIVE_CATALOG_CONFIG"
+        echo "s3.aws-secret-key=$AWS_SECRET_ACCESS_KEY" >> "$HIVE_CATALOG_CONFIG"
+        echo "s3.endpoint=$S3_ENDPOINT" >> "$HIVE_CATALOG_CONFIG"
+        if [[ $OBJECTSTORE_TLS == *"false"* ]]; then
+          echo "s3.sse.type=None" >> "$HIVE_CATALOG_CONFIG"
+        fi
       fi
 
       # add UID to /etc/passwd if missing
@@ -360,9 +362,9 @@ objects:
       hive.partition-statistics-sample-size=${HIVE_PARTITION_STATS_SAMPLE_SIZE}
       hive.metastore.uri=thrift://hive-metastore:10000
       hive.parquet.use-column-names=true
-      hive.s3.path-style-access=true
-      hive.s3.sse.enabled=${S3_SSE_ENABLED}
       hive.storage-format=Parquet
+      s3.path-style-access=true
+      fs.native-s3.enabled=true
     blackhole.propeties: |-
       connector.name=blackhole
     jmx.properties: |-
@@ -758,10 +760,6 @@ parameters:
   displayName: hive.max-partitions-per-scan
   name: HIVE_PARTITION_LIMIT
   value: '1000000'
-- description: Whether to use SSE encryption
-  displayName: hive.s3.sse.enabled
-  name: S3_SSE_ENABLED
-  value: 'True'
 
 # Trino Postgres config
 - description: Number of rows to insert into Postgres.
