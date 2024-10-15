@@ -102,22 +102,18 @@ objects:
         echo "Adding $NODE_ID to $NODE_CONFIG"
         echo "$NODE_ID" >> "$NODE_CONFIG"
       fi
-      CORE_SITE=/hadoop-config/core-site.xml
-      mkdir -p ${TRINO_HOME}/hadoop-config
-      if [[ -f ${CORE_SITE} ]]; then
-        echo "Configuring core-site.xml"
-        cat ${CORE_SITE} | sed "s#XXX_S3ENDPOINT_XXX#${S3_BUCKET_NAME}/${S3_DATA_DIR}#" > ${TRINO_HOME}/hadoop-config/core-site.xml
-      fi
       # add AWS creds to hive catalog properties
       HIVE_CATALOG_CONFIG="${TRINO_HOME}/catalog/hive.properties"
       # ensure there's a newline between the last item in the config and what we add
       echo "" >> $HIVE_CATALOG_CONFIG
-      if ! grep -q -F 'hive.s3.aws-access-key' "$HIVE_CATALOG_CONFIG"; then
-        echo "Adding hive.s3.aws-access-key and hive.s3.aws-secret-key to $HIVE_CATALOG_CONFIG"
-        echo "hive.s3.aws-access-key=$AWS_ACCESS_KEY_ID" >> "$HIVE_CATALOG_CONFIG"
-        echo "hive.s3.aws-secret-key=$AWS_SECRET_ACCESS_KEY" >> "$HIVE_CATALOG_CONFIG"
-        echo "hive.s3.endpoint=$S3_ENDPOINT" >> "$HIVE_CATALOG_CONFIG"
-        echo "hive.s3.ssl.enabled=$OBJECTSTORE_TLS" >> "$HIVE_CATALOG_CONFIG"
+      if ! grep -q -F 's3.aws-access-key' "$HIVE_CATALOG_CONFIG"; then
+        echo "Adding s3.aws-access-key and s3.aws-secret-key to $HIVE_CATALOG_CONFIG"
+        echo "s3.aws-access-key=$AWS_ACCESS_KEY_ID" >> "$HIVE_CATALOG_CONFIG"
+        echo "s3.aws-secret-key=$AWS_SECRET_ACCESS_KEY" >> "$HIVE_CATALOG_CONFIG"
+        echo "s3.endpoint=$S3_ENDPOINT" >> "$HIVE_CATALOG_CONFIG"
+        if [[ $OBJECTSTORE_TLS == *"false"* ]]; then
+          echo "s3.sse.type=None" >> "$HIVE_CATALOG_CONFIG"
+        fi
       fi
 
       # add UID to /etc/passwd if missing
@@ -351,8 +347,6 @@ objects:
       connector.name=hive
       hive.collect-column-statistics-on-write=true
       hive.compression-codec=SNAPPY
-      hive.config.resources=/etc/trino/hadoop-config/core-site.xml
-      hive.hdfs.authentication.type=NONE
       hive.metastore.authentication.type=NONE
       hive.metastore.thrift.client.connect-timeout=${METASTORE_TIMEOUT}
       hive.metastore.thrift.client.read-timeout=${METASTORE_READ_TIMEOUT}
@@ -360,9 +354,10 @@ objects:
       hive.partition-statistics-sample-size=${HIVE_PARTITION_STATS_SAMPLE_SIZE}
       hive.metastore.uri=thrift://hive-metastore:10000
       hive.parquet.use-column-names=true
-      hive.s3.path-style-access=true
-      hive.s3.sse.enabled=${S3_SSE_ENABLED}
       hive.storage-format=Parquet
+      fs.native-s3.enabled=true
+      s3.path-style-access=true
+      s3.region=us-east-1
     blackhole.propeties: |-
       connector.name=blackhole
     jmx.properties: |-
@@ -484,9 +479,6 @@ objects:
             emptyDir: {}
           - name: trino-spill
             emptyDir: {}
-          - name: hadoop-config
-            configMap:
-              name: hadoop-clowder-config
         volumeMounts:
           - name: trino-etc
             mountPath: /etc/trino
@@ -502,8 +494,6 @@ objects:
             mountPath: /data/trino/logs
           - name: trino-spill
             mountPath: /data/trino/spill
-          - name: hadoop-config
-            mountPath: /etc/trino/hadoop-config
     - name: worker
       minReplicas: ${{WORKER_REPLICAS}}
       webServices:
@@ -610,9 +600,6 @@ objects:
             emptyDir: {}
           - name: trino-spill
             emptyDir: {}
-          - name: hadoop-config
-            configMap:
-              name: hadoop-clowder-config
         volumeMounts:
           - name: trino-etc
             mountPath: /etc/trino
@@ -628,8 +615,6 @@ objects:
             mountPath: /data/trino/logs
           - name: trino-spill
             mountPath: /data/trino/spill
-          - name: hadoop-config
-            mountPath: /etc/trino/hadoop-config
     objectStore:
     - ${S3_BUCKET_NAME}
     database:
@@ -758,10 +743,6 @@ parameters:
   displayName: hive.max-partitions-per-scan
   name: HIVE_PARTITION_LIMIT
   value: '1000000'
-- description: Whether to use SSE encryption
-  displayName: hive.s3.sse.enabled
-  name: S3_SSE_ENABLED
-  value: 'True'
 
 # Trino Postgres config
 - description: Number of rows to insert into Postgres.
