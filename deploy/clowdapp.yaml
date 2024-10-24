@@ -710,13 +710,15 @@ parameters:
   name: MAX_HEAP_SIZE
   value: '3G'
 
-# S3 params
+# AWS params
 - name: S3_ENDPOINT
   value: s3.us-east-1.amazonaws.com
 - name: S3_BUCKET_NAME
   value: hccm-s3
 - name: WAREHOUSE_DIR
-  values: data
+  value: data
+- name: AWS_CATALOG_ID
+  value: '589173575009'
 
 # Trino configruation Params
 - description: Max amount of user memory a query can use on a worker (Trino default - JVM max memory * 0.3)
