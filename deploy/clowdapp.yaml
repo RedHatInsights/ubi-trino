@@ -344,6 +344,7 @@ objects:
 
       hive.metastore.glue.default-warehouse-dir=s3://${S3_BUCKET_NAME}/${WAREHOUSE_DIR}
       hive.metastore.glue.region=us-east-1
+      hive.metastore.glue.endpoint-url
       hive.metastore.glue.catalogid=${AWS_CATALOG_ID}
 
     blackhole.propeties: |-
@@ -712,7 +713,7 @@ parameters:
 
 # AWS params
 - name: S3_ENDPOINT
-  value: s3.us-east-1.amazonaws.com
+  value: https://s3.us-east-1.amazonaws.com
 - name: S3_BUCKET_NAME
   value: hccm-s3
 - name: WAREHOUSE_DIR
