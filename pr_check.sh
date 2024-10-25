@@ -23,12 +23,23 @@ curl -s $CICD_URL/bootstrap.sh > .cicd_bootstrap.sh && source .cicd_bootstrap.sh
 
 source $CICD_ROOT/build.sh
 
-# source $CICD_ROOT/_common_deploy_logic.sh
-# export NAMESPACE=$(bonfire namespace reserve)
-# oc process --local -f deploy/clowdapp.yaml | oc apply -f - -n $NAMESPACE
-source $CICD_ROOT/deploy_ephemeral_env.sh
+source ${CICD_ROOT}/_common_deploy_logic.sh
+export NAMESPACE=$(bonfire namespace reserve)
+SMOKE_NAMESPACE=$NAMESPACE
 oc get secret koku-aws --namespace=ephemeral-base -oyaml | oc apply --namespace=${NAMESPACE} -f -
-#source $CICD_ROOT/smoke_test.sh
+
+bonfire deploy \
+    ${APP_NAME} \
+    --source=appsre \
+    --ref-env ${REF_ENV} \
+    --set-image-tag ${IMAGE}=${IMAGE_TAG} \
+    --namespace ${NAMESPACE} \
+    --timeout ${DEPLOY_TIMEOUT} \
+    --optional-deps-method hybrid \
+    ${TEMPLATE_REF_ARG} \
+    ${COMPONENTS_ARG} \
+    ${COMPONENTS_RESOURCES_ARG} \
+    ${EXTRA_DEPLOY_ARGS}
 
 mkdir -p $WORKSPACE/artifacts
 cat << EOF > ${WORKSPACE}/artifacts/junit-dummy.xml
