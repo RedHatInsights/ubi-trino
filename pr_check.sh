@@ -26,7 +26,7 @@ source $CICD_ROOT/build.sh
 source ${CICD_ROOT}/_common_deploy_logic.sh
 export NAMESPACE=$(bonfire namespace reserve)
 SMOKE_NAMESPACE=$NAMESPACE
-oc get secret koku-aws --namespace=ephemeral-base -oyaml | oc apply --namespace=${NAMESPACE} -f -
+oc get secret koku-aws --namespace=ephemeral-base -oyaml | grep -v '^\s*namespace:\s' | oc apply --namespace=${NAMESPACE} -f -
 
 bonfire deploy \
     ${APP_NAME} \
