@@ -1,25 +1,33 @@
+ARG JDK_VERSION=jdk-23.0.1+11
 ARG PROMETHEUS_VERSION=0.20.0
 ARG TRINO_VERSION=461
+ARG WORK_DIR="/tmp"
 
-FROM registry.access.redhat.com/ubi9/ubi:latest as downloader
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest as downloader
 
+ARG TARGETARCH
 ARG PROMETHEUS_VERSION
 ARG TRINO_VERSION
 ARG SERVER_LOCATION="https://repo1.maven.org/maven2/io/trino/trino-server/${TRINO_VERSION}/trino-server-${TRINO_VERSION}.tar.gz"
 ARG CLIENT_LOCATION="https://repo1.maven.org/maven2/io/trino/trino-cli/${TRINO_VERSION}/trino-cli-${TRINO_VERSION}-executable.jar"
 ARG PROMETHEUS_JMX_EXPORTER_LOCATION="https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/${PROMETHEUS_VERSION}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar"
-ARG WORK_DIR="/tmp"
+ARG WORK_DIR
+ARG JDK_VERSION
 
-RUN curl -L ${SERVER_LOCATION} | tar -zxf - -C ${WORK_DIR}
-RUN \
-curl -o ${WORK_DIR}/trino-cli-${TRINO_VERSION}-executable.jar ${CLIENT_LOCATION} && \
-chmod +x ${WORK_DIR}/trino-cli-${TRINO_VERSION}-executable.jar
-RUN \
-curl -o ${WORK_DIR}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar ${PROMETHEUS_JMX_EXPORTER_LOCATION} && \
-chmod +x ${WORK_DIR}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar
+ENV JAVA_HOME=/usr/lib/jvm/${JDK_VERSION}
 
-COPY bin ${WORK_DIR}/trino-server-${TRINO_VERSION}
-COPY default ${WORK_DIR}/
+RUN set -euxo pipefail && \
+    microdnf -y install tar gzip && \
+    mkdir -p "${JAVA_HOME}" && \
+    case $TARGETARCH in arm64) PACKAGE_ARCH=aarch64;; amd64) PACKAGE_ARCH=x64; esac && \
+    JDK_DOWNLOAD_LINK="https://api.adoptium.net/v3/binary/version/${JDK_VERSION}/linux/${PACKAGE_ARCH}/jdk/hotspot/normal/eclipse?project=jdk" && \
+    curl --progress-bar --location --fail --show-error "${JDK_DOWNLOAD_LINK}" | tar -xz --strip 1 -C "${JAVA_HOME}"
+
+RUN curl -L ${SERVER_LOCATION} | tar -zxf - -C ${WORK_DIR} && \
+    curl -o ${WORK_DIR}/trino-cli-${TRINO_VERSION}-executable.jar ${CLIENT_LOCATION} && \
+    chmod +x ${WORK_DIR}/trino-cli-${TRINO_VERSION}-executable.jar && \
+    curl -o ${WORK_DIR}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar ${PROMETHEUS_JMX_EXPORTER_LOCATION} && \
+    chmod +x ${WORK_DIR}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar
 
 ###########################
 # Remove all unused plugins
@@ -31,10 +39,17 @@ RUN mkdir ${to_delete} && \
     rm -rf ${to_delete}
 ###########################
 
+
 # Final container image:
-FROM registry.access.redhat.com/ubi9/ubi:latest
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest as final
 
 ARG VERSION
+ARG JDK_VERSION
+ARG WORK_DIR
+
+ENV JAVA_HOME=/usr/lib/jvm/${JDK_VERSION}
+ENV TRINO_HOME=/etc/trino
+ENV TRINO_HISTORY_FILE=/data/trino/.trino_history
 
 LABEL io.k8s.display-name="OpenShift Trino"
 LABEL io.k8s.description="This is an image used by Cost Management to install and run Trino."
@@ -43,32 +58,27 @@ LABEL io.openshift.tags="openshift"
 LABEL maintainer="<cost-mgmt@redhat.com>"
 LABEL version=${VERSION}
 
-RUN yum -y update && yum clean all
+COPY --from=downloader "${JAVA_HOME}" "${JAVA_HOME}"
 
-RUN \
-    # symlink the python3 installed in the container
-    ln -s /usr/libexec/platform-python /usr/bin/python && \
-    # add the Azul RPM repository -> needs to match whatever trino requires
-    yum install -y https://cdn.azul.com/zulu/bin/zulu-repo-1.0.0-1.noarch.rpm && \
-    set -xeu && \
-    INSTALL_PKGS="zulu22-jre less jq" && \
-    yum install -y $INSTALL_PKGS --setopt=tsflags=nodocs --setopt=install_weak_deps=False && \
-    yum clean all && \
-    rm -rf /var/cache/yum
+RUN set -eux \
+    && microdnf -y upgrade \
+    && microdnf install -y --nodocs --setopt install_weak_deps=0 \
+        python3 \
+        shadow-utils \
+        tar \
+    && update-alternatives --install /usr/bin/python python /usr/bin/python3 1 \
+    && update-alternatives --install /usr/bin/java java "${JAVA_HOME}/bin/java" 1 \
+    && rm -rf /var/cache/yum
 
-# add user and directories
-RUN \
-    groupadd trino --gid 1000 && \
+# Add user and directories
+RUN groupadd trino --gid 1000 && \
     useradd trino --uid 1000 --gid 1000 && \
     mkdir -p /usr/lib/trino /data/trino/{data,logs,spill} && \
     chown -R "trino:trino" /usr/lib/trino /data/trino
 
-ENV JAVA_HOME=/usr/lib/jvm/zulu22 \
-    TRINO_HOME=/etc/trino \
-    TRINO_HISTORY_FILE=/data/trino/.trino_history
 
 # https://docs.oracle.com/javase/7/docs/technotes/guides/net/properties.html
-# Java caches dns results forever, don't cache dns results forever:
+# Java caches DNS results forever. Don't cache DNS results forever.
 RUN touch $JAVA_HOME/lib/security/java.security && \
     chown 1000:0 $JAVA_HOME/lib/security/java.security && \
     chmod g+rw $JAVA_HOME/lib/security/java.security && \
@@ -83,9 +93,10 @@ RUN chown -R 1000:0 ${HOME} /etc/passwd $(readlink -f ${JAVA_HOME}/lib/security/
 
 ARG PROMETHEUS_VERSION
 ARG TRINO_VERSION
-COPY --from=downloader /tmp/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar /usr/lib/trino/jmx_exporter.jar
-COPY --from=downloader /tmp/trino-cli-${TRINO_VERSION}-executable.jar /usr/bin/trino
-COPY --from=downloader --chown=trino:trino /tmp/trino-server-${TRINO_VERSION} /usr/lib/trino
+COPY --from=downloader ${WORK_DIR}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar /usr/lib/trino/jmx_exporter.jar
+COPY --from=downloader ${WORK_DIR}/trino-cli-${TRINO_VERSION}-executable.jar /usr/bin/trino
+COPY --from=downloader --chown=trino:trino ${WORK_DIR}/trino-server-${TRINO_VERSION} /usr/lib/trino
+COPY --chown=trino:trino bin/ /usr/lib/trino/
 COPY --chown=trino:trino default/etc $TRINO_HOME
 COPY LICENSE /licenses/AGPL-1.0-or-later.txt
 
