@@ -16,27 +16,27 @@ ARG JDK_VERSION
 
 ENV JAVA_HOME=/usr/lib/jvm/${JDK_VERSION}
 
-RUN set -euxo pipefail && \
-    microdnf -y install tar gzip && \
-    mkdir -p "${JAVA_HOME}" && \
-    case $TARGETARCH in arm64) PACKAGE_ARCH=aarch64;; amd64) PACKAGE_ARCH=x64; esac && \
-    JDK_DOWNLOAD_LINK="https://api.adoptium.net/v3/binary/version/${JDK_VERSION}/linux/${PACKAGE_ARCH}/jdk/hotspot/normal/eclipse?project=jdk" && \
-    curl --progress-bar --location --fail --show-error "${JDK_DOWNLOAD_LINK}" | tar -xz --strip 1 -C "${JAVA_HOME}"
+RUN set -euxo pipefail \
+    && microdnf -y install tar gzip \
+    && mkdir -p "${JAVA_HOME}" \
+    && case $TARGETARCH in arm64) PACKAGE_ARCH=aarch64;; amd64) PACKAGE_ARCH=x64; esac \
+    && JDK_DOWNLOAD_LINK="https://api.adoptium.net/v3/binary/version/${JDK_VERSION}/linux/${PACKAGE_ARCH}/jdk/hotspot/normal/eclipse?project=jdk" \
+    && curl --progress-bar --location --fail --show-error "${JDK_DOWNLOAD_LINK}" | tar -xz --strip 1 -C "${JAVA_HOME}"
 
-RUN curl -L ${SERVER_LOCATION} | tar -zxf - -C ${WORK_DIR} && \
-    curl -o ${WORK_DIR}/trino-cli-${TRINO_VERSION}-executable.jar ${CLIENT_LOCATION} && \
-    chmod +x ${WORK_DIR}/trino-cli-${TRINO_VERSION}-executable.jar && \
-    curl -o ${WORK_DIR}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar ${PROMETHEUS_JMX_EXPORTER_LOCATION} && \
-    chmod +x ${WORK_DIR}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar
+RUN curl -L ${SERVER_LOCATION} | tar -zxf - -C ${WORK_DIR} \
+    && curl -o ${WORK_DIR}/trino-cli-${TRINO_VERSION}-executable.jar ${CLIENT_LOCATION} \
+    && chmod +x ${WORK_DIR}/trino-cli-${TRINO_VERSION}-executable.jar \
+    && curl -o ${WORK_DIR}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar ${PROMETHEUS_JMX_EXPORTER_LOCATION} \
+    && chmod +x ${WORK_DIR}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar
 
 ###########################
 # Remove all unused plugins
 # Only hive, blackhole, jmx, memory, postgresql, tpcds, and tpch are configured plugins.
 ARG to_delete="/TO_DELETE"
-RUN mkdir ${to_delete} && \
-    mv ${WORK_DIR}/trino-server-${TRINO_VERSION}/plugin/* ${to_delete} && \
-    mv ${to_delete}/{hive,blackhole,jmx,memory,postgresql,tpcds,tpch} ${WORK_DIR}/trino-server-${TRINO_VERSION}/plugin/. && \
-    rm -rf ${to_delete}
+RUN mkdir ${to_delete} \
+    && mv ${WORK_DIR}/trino-server-${TRINO_VERSION}/plugin/* ${to_delete} \
+    && mv ${to_delete}/{hive,blackhole,jmx,memory,postgresql,tpcds,tpch} ${WORK_DIR}/trino-server-${TRINO_VERSION}/plugin/. \
+    && rm -rf ${to_delete}
 ###########################
 
 
@@ -71,25 +71,25 @@ RUN set -eux \
     && rm -rf /var/cache/yum
 
 # Add user and directories
-RUN groupadd trino --gid 1000 && \
-    useradd trino --uid 1000 --gid 1000 && \
-    mkdir -p /usr/lib/trino /data/trino/{data,logs,spill} && \
-    chown -R "trino:trino" /usr/lib/trino /data/trino
+RUN groupadd trino --gid 1000 \
+    && useradd trino --uid 1000 --gid 1000 \
+    && mkdir -p /usr/lib/trino /data/trino/{data,logs,spill} \
+    && chown -R "trino:trino" /usr/lib/trino /data/trino
 
 
 # https://docs.oracle.com/javase/7/docs/technotes/guides/net/properties.html
 # Java caches DNS results forever. Don't cache DNS results forever.
-RUN touch $JAVA_HOME/lib/security/java.security && \
-    chown 1000:0 $JAVA_HOME/lib/security/java.security && \
-    chmod g+rw $JAVA_HOME/lib/security/java.security && \
-    sed -i '/networkaddress.cache.ttl/d' $JAVA_HOME/lib/security/java.security && \
-    sed -i '/networkaddress.cache.negative.ttl/d' $JAVA_HOME/lib/security/java.security && \
-    echo 'networkaddress.cache.ttl=0' >> $JAVA_HOME/lib/security/java.security && \
-    echo 'networkaddress.cache.negative.ttl=0' >> $JAVA_HOME/lib/security/java.security
+RUN touch $JAVA_HOME/lib/security/java.security \
+    && chown 1000:0 $JAVA_HOME/lib/security/java.security \
+    && chmod g+rw $JAVA_HOME/lib/security/java.security \
+    && sed -i '/networkaddress.cache.ttl/d' $JAVA_HOME/lib/security/java.security \
+    && sed -i '/networkaddress.cache.negative.ttl/d' $JAVA_HOME/lib/security/java.security \
+    && echo 'networkaddress.cache.ttl=0' >> $JAVA_HOME/lib/security/java.security \
+    && echo 'networkaddress.cache.negative.ttl=0' >> $JAVA_HOME/lib/security/java.security
 
-RUN chown -R 1000:0 ${HOME} /etc/passwd $(readlink -f ${JAVA_HOME}/lib/security/cacerts) && \
-    chmod -R 774 /etc/passwd $(readlink -f ${JAVA_HOME}/lib/security/cacerts) && \
-    chmod -R 775 ${HOME}
+RUN chown -R 1000:0 ${HOME} /etc/passwd $(readlink -f ${JAVA_HOME}/lib/security/cacerts) \
+    && chmod -R 774 /etc/passwd $(readlink -f ${JAVA_HOME}/lib/security/cacerts) \
+    && chmod -R 775 ${HOME}
 
 ARG PROMETHEUS_VERSION
 ARG TRINO_VERSION
