@@ -18,6 +18,7 @@ ENV JAVA_HOME=/usr/lib/jvm/${JDK_VERSION}
 
 RUN set -euxo pipefail \
     && microdnf -y install tar gzip \
+    && microdnf clean all \
     && mkdir -p "${JAVA_HOME}" \
     && case $TARGETARCH in arm64) PACKAGE_ARCH=aarch64;; amd64) PACKAGE_ARCH=x64; esac \
     && JDK_DOWNLOAD_LINK="https://api.adoptium.net/v3/binary/version/${JDK_VERSION}/linux/${PACKAGE_ARCH}/jdk/hotspot/normal/eclipse?project=jdk" \
@@ -63,12 +64,13 @@ COPY --from=downloader "${JAVA_HOME}" "${JAVA_HOME}"
 RUN set -eux \
     && microdnf -y upgrade \
     && microdnf install -y --nodocs --setopt install_weak_deps=0 \
+        jq \
+        less \
         python3 \
         shadow-utils \
-        tar \
+    && microdnf clean all \
     && update-alternatives --install /usr/bin/python python /usr/bin/python3 1 \
-    && update-alternatives --install /usr/bin/java java "${JAVA_HOME}/bin/java" 1 \
-    && rm -rf /var/cache/yum
+    && update-alternatives --install /usr/bin/java java "${JAVA_HOME}/bin/java" 1
 
 # Add user and directories
 RUN groupadd trino --gid 1000 \
