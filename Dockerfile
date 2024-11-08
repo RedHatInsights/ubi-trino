@@ -1,4 +1,4 @@
-ARG JDK_VERSION=jdk-23.0.1+11
+ARG JDK_VERSION=jdk-23.0.1+11  # https://api.adoptium.net/v3/info/release_names?image_type=jdk&page=0&page_size=100&project=jdk&release_type=ga&semver=false&sort_method=DEFAULT&sort_order=DESC&vendor=eclipse
 ARG PROMETHEUS_VERSION=0.20.0
 ARG TRINO_VERSION=461
 ARG WORK_DIR="/tmp"
@@ -16,18 +16,18 @@ ARG JDK_VERSION
 
 ENV JAVA_HOME=/usr/lib/jvm/${JDK_VERSION}
 
-RUN set -euxo pipefail \
-    && microdnf -y install tar gzip \
-    && microdnf clean all \
-    && mkdir -p "${JAVA_HOME}" \
+RUN microdnf -y install tar gzip \
+    && microdnf clean all
+
+RUN mkdir -p "${JAVA_HOME}" \
     && case $TARGETARCH in arm64) PACKAGE_ARCH=aarch64;; amd64) PACKAGE_ARCH=x64; esac \
     && JDK_DOWNLOAD_LINK="https://api.adoptium.net/v3/binary/version/${JDK_VERSION}/linux/${PACKAGE_ARCH}/jdk/hotspot/normal/eclipse?project=jdk" \
     && curl --progress-bar --location --fail --show-error "${JDK_DOWNLOAD_LINK}" | tar -xz --strip 1 -C "${JAVA_HOME}"
 
-RUN curl -L ${SERVER_LOCATION} | tar -zxf - -C ${WORK_DIR} \
-    && curl -o ${WORK_DIR}/trino-cli-${TRINO_VERSION}-executable.jar ${CLIENT_LOCATION} \
+RUN curl --progress-bar --location --fail --show-error ${SERVER_LOCATION} | tar -zxf - -C ${WORK_DIR} \
+    && curl --progress-bar --location --fail --show-error --output ${WORK_DIR}/trino-cli-${TRINO_VERSION}-executable.jar ${CLIENT_LOCATION} \
     && chmod +x ${WORK_DIR}/trino-cli-${TRINO_VERSION}-executable.jar \
-    && curl -o ${WORK_DIR}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar ${PROMETHEUS_JMX_EXPORTER_LOCATION} \
+    && curl --progress-bar --location --fail --show-error --output ${WORK_DIR}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar ${PROMETHEUS_JMX_EXPORTER_LOCATION} \
     && chmod +x ${WORK_DIR}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar
 
 ###########################
