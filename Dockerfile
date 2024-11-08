@@ -44,13 +44,16 @@ RUN mkdir ${to_delete} \
 # Final container image:
 FROM registry.access.redhat.com/ubi9/ubi-minimal:latest as final
 
-ARG VERSION
 ARG JDK_VERSION
+ARG PROMETHEUS_VERSION
+ARG TRINO_VERSION
+ARG VERSION
 ARG WORK_DIR
 
 ENV JAVA_HOME=/usr/lib/jvm/${JDK_VERSION}
 ENV TRINO_HOME=/etc/trino
 ENV TRINO_HISTORY_FILE=/data/trino/.trino_history
+ENV PATH=${PATH}:${JAVA_HOME}/bin
 
 LABEL io.k8s.display-name="OpenShift Trino"
 LABEL io.k8s.description="This is an image used by Cost Management to install and run Trino."
@@ -69,8 +72,7 @@ RUN set -eux \
         python3 \
         shadow-utils \
     && microdnf clean all \
-    && update-alternatives --install /usr/bin/python python /usr/bin/python3 1 \
-    && update-alternatives --install /usr/bin/java java "${JAVA_HOME}/bin/java" 1
+    && update-alternatives --install /usr/bin/python python /usr/bin/python3 1
 
 # Add user and directories
 RUN groupadd trino --gid 1000 \
@@ -93,8 +95,6 @@ RUN chown -R 1000:0 ${HOME} /etc/passwd $(readlink -f ${JAVA_HOME}/lib/security/
     && chmod -R 774 /etc/passwd $(readlink -f ${JAVA_HOME}/lib/security/cacerts) \
     && chmod -R 775 ${HOME}
 
-ARG PROMETHEUS_VERSION
-ARG TRINO_VERSION
 COPY --from=downloader ${WORK_DIR}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar /usr/lib/trino/jmx_exporter.jar
 COPY --from=downloader ${WORK_DIR}/trino-cli-${TRINO_VERSION}-executable.jar /usr/bin/trino
 COPY --from=downloader --chown=trino:trino ${WORK_DIR}/trino-server-${TRINO_VERSION} /usr/lib/trino
