@@ -153,8 +153,10 @@ objects:
       fi
 
       ############## BLOCK TO BE REMOVED ##############
-      mv $HIVE_CATALOG_CONFIG "$TRINO_HOME/catalog/$HIVE_PROPERTIES_FILE"
-      mv $GLUE_CATALOG_CONFIG "$TRINO_HOME/catalog/$GLUE_PROPERTIES_FILE"
+      mv $HIVE_CATALOG_CONFIG "$TRINO_HOME/catalog/$HIVE_PROPERTIES_FILE.bak"
+      mv $GLUE_CATALOG_CONFIG "$TRINO_HOME/catalog/$GLUE_PROPERTIES_FILE.bak"
+      mv "$TRINO_HOME/catalog/$HIVE_PROPERTIES_FILE.bak" "$TRINO_HOME/catalog/$HIVE_PROPERTIES_FILE"
+      mv "$TRINO_HOME/catalog/$GLUE_PROPERTIES_FILE.bak" "$TRINO_HOME/catalog/$GLUE_PROPERTIES_FILE"
       #################################################
 
       exec "$@"
