@@ -59,13 +59,16 @@ objects:
         export HIVE_AWS_ACCESS_KEY_ID=$(jq -r '.objectStore.buckets[0].accessKey' ${ACG_CONFIG})
         export HIVE_AWS_SECRET_ACCESS_KEY=$(jq -r '.objectStore.buckets[0].secretKey' ${ACG_CONFIG})
         export HIVE_S3_BUCKET_NAME=$(jq -r '.objectStore.buckets[0].requestedName' ${ACG_CONFIG})
+
         HIVE_OBJECTSTORE_HOST=$(jq -r '.objectStore.hostname' ${ACG_CONFIG})
         HIVE_OBJECTSTORE_PORT=$(jq -r '.objectStore.port' ${ACG_CONFIG})
         HIVE_OBJECTSTORE_TLS=$(jq -r '.objectStore.tls' ${ACG_CONFIG})
+
         export HIVE_URI_PREFIX=https
         if [[ $HIVE_OBJECTSTORE_TLS == *"false"* ]]; then
           export HIVE_URI_PREFIX=http
         fi
+
         HIVE_S3_ENDPOINT="${HIVE_URI_PREFIX}://${HIVE_OBJECTSTORE_HOST}"
         if [[ -n "${HIVE_OBJECTSTORE_PORT}" ]] && [[ "${HIVE_OBJECTSTORE_PORT}" != "null" ]]; then
           HIVE_S3_ENDPOINT="${HIVE_S3_ENDPOINT}:${HIVE_OBJECTSTORE_PORT}"
