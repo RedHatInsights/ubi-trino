@@ -56,6 +56,7 @@ objects:
           export PGSSLROOTCERT=$temp_file
         fi
 
+        ############## BLOCK TO BE REMOVED ##############
         export HIVE_AWS_ACCESS_KEY_ID=$(jq -r '.objectStore.buckets[0].accessKey' ${ACG_CONFIG})
         export HIVE_AWS_SECRET_ACCESS_KEY=$(jq -r '.objectStore.buckets[0].secretKey' ${ACG_CONFIG})
         export HIVE_S3_BUCKET_NAME=$(jq -r '.objectStore.buckets[0].requestedName' ${ACG_CONFIG})
@@ -74,6 +75,7 @@ objects:
           HIVE_S3_ENDPOINT="${HIVE_S3_ENDPOINT}:${HIVE_OBJECTSTORE_PORT}"
         fi
         export HIVE_S3_ENDPOINT
+        #################################################
       fi
       echo "Copy config files to ${TRINO_HOME}/"
       cp -v -L -r -f /etc/trino-init/* ${TRINO_HOME}/
@@ -116,6 +118,7 @@ objects:
         echo "hive.metastore.glue.aws-secret-key=$AWS_SECRET_ACCESS_KEY" >> "$GLUE_CATALOG_CONFIG"
       fi
 
+      ############## BLOCK TO BE REMOVED ##############
       # add AWS creds to hive catalog properties
       HIVE_CATALOG_CONFIG="$TRINO_HOME/catalog/hive.properties"
       # ensure there's a newline between the last item in the config and what we add
@@ -129,6 +132,7 @@ objects:
           echo "s3.sse.type=None" >> "$HIVE_CATALOG_CONFIG"
         fi
       fi
+      #################################################
 
       # add UID to /etc/passwd if missing
       if ! whoami &> /dev/null; then
@@ -148,8 +152,10 @@ objects:
           fi
       fi
 
+      ############## BLOCK TO BE REMOVED ##############
       mv $HIVE_CATALOG_CONFIG "$TRINO_HOME/catalog/$HIVE_PROPERTIES_FILE"
       mv $GLUE_CATALOG_CONFIG "$TRINO_HOME/catalog/$GLUE_PROPERTIES_FILE"
+      #################################################
 
       exec "$@"
 - apiVersion: v1
@@ -767,6 +773,8 @@ parameters:
   value: '3G'
 
 # Glue or Hive config files
+# when transitioning to Glue, swap these values
+# once fully transitioned, these can be removed entirely, and the glue.properties becomes hive.properties
 - name: HIVE_PROPERTIES_FILE
   value: hive.properties
 - name: GLUE_PROPERTIES_FILE
@@ -807,6 +815,14 @@ parameters:
   required: true
 
 # Trino Hive config
+- description: Socket connect timeout for metastore client - TO BE REMOVED
+  displayName: hive.metastore.thrift.client.connect-timeout
+  name: METASTORE_READ_TIMEOUT
+  value: '300s'
+- description: Socket read timeout for metastore client - TO BE REMOVED
+  displayName: hive.metastore.thrift.client.read-timeout
+  name: METASTORE_TIMEOUT
+  value: '300s'
 - description: Specifies the number of partitions to analyze when computing table statistics
   displayName: hive.partition-statistics-sample-size
   name: HIVE_PARTITION_STATS_SAMPLE_SIZE
