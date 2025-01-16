@@ -56,6 +56,22 @@ objects:
           export PGSSLROOTCERT=$temp_file
         fi
 
+        export HIVE_AWS_ACCESS_KEY_ID=$(jq -r '.objectStore.buckets[0].accessKey' ${ACG_CONFIG})
+        export HIVE_AWS_SECRET_ACCESS_KEY=$(jq -r '.objectStore.buckets[0].secretKey' ${ACG_CONFIG})
+        export HIVE_S3_BUCKET_NAME=$(jq -r '.objectStore.buckets[0].requestedName' ${ACG_CONFIG})
+        HIVE_OBJECTSTORE_HOST=$(jq -r '.objectStore.hostname' ${ACG_CONFIG})
+        HIVE_OBJECTSTORE_PORT=$(jq -r '.objectStore.port' ${ACG_CONFIG})
+        HIVE_OBJECTSTORE_TLS=$(jq -r '.objectStore.tls' ${ACG_CONFIG})
+        export HIVE_URI_PREFIX=https
+        if [[ $HIVE_OBJECTSTORE_TLS == *"false"* ]]; then
+          export HIVE_URI_PREFIX=http
+        fi
+        HIVE_S3_ENDPOINT="${HIVE_URI_PREFIX}://${HIVE_OBJECTSTORE_HOST}"
+        if [[ -n "${HIVE_OBJECTSTORE_PORT}" ]] && [[ "${HIVE_OBJECTSTORE_PORT}" != "null" ]]; then
+          HIVE_S3_ENDPOINT="${HIVE_S3_ENDPOINT}:${HIVE_OBJECTSTORE_PORT}"
+        fi
+        export HIVE_S3_ENDPOINT
+
       fi
       echo "Copy config files to ${TRINO_HOME}/"
       cp -v -L -r -f /etc/trino-init/* ${TRINO_HOME}/
@@ -76,7 +92,7 @@ objects:
         importCert /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt changeit $JAVA_HOME/lib/security/cacerts
       fi
       # add node id to node config
-      NODE_CONFIG="${TRINO_HOME}/node.properties"
+      NODE_CONFIG="$TRINO_HOME/node.properties"
       # ensure there's a newline between the last item in the config and what we add
       echo "" >> $NODE_CONFIG
       if ! grep -q -F 'node.id' "$NODE_CONFIG"; then
@@ -84,19 +100,32 @@ objects:
         echo "Adding $NODE_ID to $NODE_CONFIG"
         echo "$NODE_ID" >> "$NODE_CONFIG"
       fi
+      # add AWS creds to glue catalog properties
+      GLUE_CATALOG_CONFIG="$TRINO_HOME/catalog/glue.properties"
+      # ensure there's a newline between the last item in the config and what we add
+      echo "" >> $GLUE_CATALOG_CONFIG
+      if ! grep -q -F 's3.aws-access-key' "$GLUE_CATALOG_CONFIG"; then
+        echo "Adding s3.aws-access-key and s3.aws-secret-key to $GLUE_CATALOG_CONFIG"
+
+        echo "s3.aws-access-key=$AWS_ACCESS_KEY_ID" >> "$GLUE_CATALOG_CONFIG"
+        echo "s3.aws-secret-key=$AWS_SECRET_ACCESS_KEY" >> "$GLUE_CATALOG_CONFIG"
+
+        echo "hive.metastore.glue.aws-access-key=$AWS_ACCESS_KEY_ID" >> "$GLUE_CATALOG_CONFIG"
+        echo "hive.metastore.glue.aws-secret-key=$AWS_SECRET_ACCESS_KEY" >> "$GLUE_CATALOG_CONFIG"
+      fi
+
       # add AWS creds to hive catalog properties
-      HIVE_CATALOG_CONFIG="${TRINO_HOME}/catalog/hive.properties"
+      HIVE_CATALOG_CONFIG="$TRINO_HOME/catalog/hive.properties"
       # ensure there's a newline between the last item in the config and what we add
       echo "" >> $HIVE_CATALOG_CONFIG
       if ! grep -q -F 's3.aws-access-key' "$HIVE_CATALOG_CONFIG"; then
         echo "Adding s3.aws-access-key and s3.aws-secret-key to $HIVE_CATALOG_CONFIG"
-
-        echo "s3.aws-access-key=$AWS_ACCESS_KEY_ID" >> "$HIVE_CATALOG_CONFIG"
-        echo "s3.aws-secret-key=$AWS_SECRET_ACCESS_KEY" >> "$HIVE_CATALOG_CONFIG"
-
-        echo "hive.metastore.glue.aws-access-key=$AWS_ACCESS_KEY_ID" >> "$HIVE_CATALOG_CONFIG"
-        echo "hive.metastore.glue.aws-secret-key=$AWS_SECRET_ACCESS_KEY" >> "$HIVE_CATALOG_CONFIG"
-
+        echo "s3.aws-access-key=$HIVE_AWS_ACCESS_KEY_ID" >> "$HIVE_CATALOG_CONFIG"
+        echo "s3.aws-secret-key=$HIVE_AWS_SECRET_ACCESS_KEY" >> "$HIVE_CATALOG_CONFIG"
+        echo "s3.endpoint=$HIVE_S3_ENDPOINT" >> "$HIVE_CATALOG_CONFIG"
+        if [[ $HIVE_OBJECTSTORE_TLS == *"false"* ]]; then
+          echo "s3.sse.type=None" >> "$HIVE_CATALOG_CONFIG"
+        fi
       fi
 
       # add UID to /etc/passwd if missing
@@ -116,6 +145,10 @@ objects:
               echo "Done adding user ${USER_NAME:-trino} with current UID $(id -u) to /etc/passwd"
           fi
       fi
+
+      mv $HIVE_CATALOG_CONFIG "$TRINO_HOME/catalog/$HIVE_PROPERTIES_FILE"
+      mv $GLUE_CATALOG_CONFIG "$TRINO_HOME/catalog/$GLUE_PROPERTIES_FILE"
+
       exec "$@"
 - apiVersion: v1
   kind: ConfigMap
@@ -328,6 +361,21 @@ objects:
           type: GAUGE
     hive.properties: |-
       connector.name=hive
+      hive.collect-column-statistics-on-write=true
+      hive.compression-codec=SNAPPY
+      hive.metastore.authentication.type=NONE
+      hive.metastore.thrift.client.connect-timeout=${METASTORE_TIMEOUT}
+      hive.metastore.thrift.client.read-timeout=${METASTORE_READ_TIMEOUT}
+      hive.max-partitions-per-scan=${HIVE_PARTITION_LIMIT}
+      hive.partition-statistics-sample-size=${HIVE_PARTITION_STATS_SAMPLE_SIZE}
+      hive.metastore.uri=thrift://hive-metastore:10000
+      hive.parquet.use-column-names=true
+      hive.storage-format=Parquet
+      fs.native-s3.enabled=true
+      s3.path-style-access=true
+      s3.region=us-east-1
+    glue.properties: |-
+      connector.name=hive
       hive.metastore=glue
       hive.collect-column-statistics-on-write=true
       hive.compression-codec=SNAPPY
@@ -341,11 +389,9 @@ objects:
       s3.path-style-access=true
       s3.region=${S3_REGION}
       s3.endpoint=${S3_ENDPOINT}
-
       hive.metastore.glue.default-warehouse-dir=s3://${S3_BUCKET_NAME}/${WAREHOUSE_DIR}
       hive.metastore.glue.region=${S3_REGION}
       hive.metastore.glue.catalogid=${AWS_CATALOG_ID}
-
     blackhole.propeties: |-
       connector.name=blackhole
     jmx.properties: |-
@@ -417,6 +463,10 @@ objects:
                 key: aws-secret-access-key
                 name: koku-aws
                 optional: false
+          - name: HIVE_PROPERTIES_FILE
+            value: ${HIVE_PROPERTIES_FILE}
+          - name: GLUE_PROPERTIES_FILE
+            value: ${GLUE_PROPERTIES_FILE}
           - name: QUERY_MAX_MEMORY_PER_NODE
             value: ${QUERY_MAX_MEMORY_PER_NODE}
           - name: QUERY_MAX_MEMORY
@@ -542,6 +592,10 @@ objects:
                 key: aws-secret-access-key
                 name: koku-aws
                 optional: false
+          - name: HIVE_PROPERTIES_FILE
+            value: ${HIVE_PROPERTIES_FILE}
+          - name: GLUE_PROPERTIES_FILE
+            value: ${GLUE_PROPERTIES_FILE}
           - name: QUERY_MAX_MEMORY_PER_NODE
             value: ${QUERY_MAX_MEMORY_PER_NODE}
           - name: QUERY_MAX_MEMORY
@@ -709,6 +763,12 @@ parameters:
   displayName: xmx
   name: MAX_HEAP_SIZE
   value: '3G'
+
+# Glue or Hive config files
+- name: HIVE_PROPERTIES_FILE
+  value: hive.properties
+- name: GLUE_PROPERTIES_FILE
+  value: glue.properties
 
 # AWS params
 - name: S3_ENDPOINT
