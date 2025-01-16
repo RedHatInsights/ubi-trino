@@ -74,7 +74,6 @@ objects:
           HIVE_S3_ENDPOINT="${HIVE_S3_ENDPOINT}:${HIVE_OBJECTSTORE_PORT}"
         fi
         export HIVE_S3_ENDPOINT
-
       fi
       echo "Copy config files to ${TRINO_HOME}/"
       cp -v -L -r -f /etc/trino-init/* ${TRINO_HOME}/
