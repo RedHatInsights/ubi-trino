@@ -13,7 +13,7 @@ objects:
 - apiVersion: v1
   kind: ConfigMap
   metadata:
-    name: trino-scripts-${CONFIGMAP_HASH}
+    name: trino-scripts
     labels:
       app: trino
   data:
@@ -56,24 +56,26 @@ objects:
           export PGSSLROOTCERT=$temp_file
         fi
 
-        export AWS_ACCESS_KEY_ID=$(jq -r '.objectStore.buckets[0].accessKey' ${ACG_CONFIG})
-        export AWS_SECRET_ACCESS_KEY=$(jq -r '.objectStore.buckets[0].secretKey' ${ACG_CONFIG})
-        export S3_BUCKET_NAME=$(jq -r '.objectStore.buckets[0].requestedName' ${ACG_CONFIG})
+        ############## BLOCK TO BE REMOVED ##############
+        export HIVE_AWS_ACCESS_KEY_ID=$(jq -r '.objectStore.buckets[0].accessKey' ${ACG_CONFIG})
+        export HIVE_AWS_SECRET_ACCESS_KEY=$(jq -r '.objectStore.buckets[0].secretKey' ${ACG_CONFIG})
+        export HIVE_S3_BUCKET_NAME=$(jq -r '.objectStore.buckets[0].requestedName' ${ACG_CONFIG})
 
-        OBJECTSTORE_HOST=$(jq -r '.objectStore.hostname' ${ACG_CONFIG})
-        OBJECTSTORE_PORT=$(jq -r '.objectStore.port' ${ACG_CONFIG})
-        OBJECTSTORE_TLS=$(jq -r '.objectStore.tls' ${ACG_CONFIG})
+        HIVE_OBJECTSTORE_HOST=$(jq -r '.objectStore.hostname' ${ACG_CONFIG})
+        HIVE_OBJECTSTORE_PORT=$(jq -r '.objectStore.port' ${ACG_CONFIG})
+        HIVE_OBJECTSTORE_TLS=$(jq -r '.objectStore.tls' ${ACG_CONFIG})
 
-        export URI_PREFIX=https
-        if [[ $OBJECTSTORE_TLS == *"false"* ]]; then
-          export URI_PREFIX=http
+        export HIVE_URI_PREFIX=https
+        if [[ $HIVE_OBJECTSTORE_TLS == *"false"* ]]; then
+          export HIVE_URI_PREFIX=http
         fi
 
-        S3_ENDPOINT="${URI_PREFIX}://${OBJECTSTORE_HOST}"
-        if [[ -n "${OBJECTSTORE_PORT}" ]] && [[ "${OBJECTSTORE_PORT}" != "null" ]]; then
-          S3_ENDPOINT="${S3_ENDPOINT}:${OBJECTSTORE_PORT}"
+        HIVE_S3_ENDPOINT="${HIVE_URI_PREFIX}://${HIVE_OBJECTSTORE_HOST}"
+        if [[ -n "${HIVE_OBJECTSTORE_PORT}" ]] && [[ "${HIVE_OBJECTSTORE_PORT}" != "null" ]]; then
+          HIVE_S3_ENDPOINT="${HIVE_S3_ENDPOINT}:${HIVE_OBJECTSTORE_PORT}"
         fi
-        export S3_ENDPOINT
+        export HIVE_S3_ENDPOINT
+        #################################################
       fi
       echo "Copy config files to ${TRINO_HOME}/"
       cp -v -L -r -f /etc/trino-init/* ${TRINO_HOME}/
@@ -94,7 +96,7 @@ objects:
         importCert /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt changeit $JAVA_HOME/lib/security/cacerts
       fi
       # add node id to node config
-      NODE_CONFIG="${TRINO_HOME}/node.properties"
+      NODE_CONFIG="$TRINO_HOME/node.properties"
       # ensure there's a newline between the last item in the config and what we add
       echo "" >> $NODE_CONFIG
       if ! grep -q -F 'node.id' "$NODE_CONFIG"; then
@@ -102,19 +104,35 @@ objects:
         echo "Adding $NODE_ID to $NODE_CONFIG"
         echo "$NODE_ID" >> "$NODE_CONFIG"
       fi
+      # add AWS creds to glue catalog properties
+      GLUE_CATALOG_CONFIG="$TRINO_HOME/catalog/glue.properties"
+      # ensure there's a newline between the last item in the config and what we add
+      echo "" >> $GLUE_CATALOG_CONFIG
+      if ! grep -q -F 's3.aws-access-key' "$GLUE_CATALOG_CONFIG"; then
+        echo "Adding s3.aws-access-key and s3.aws-secret-key to $GLUE_CATALOG_CONFIG"
+
+        echo "s3.aws-access-key=$AWS_ACCESS_KEY_ID" >> "$GLUE_CATALOG_CONFIG"
+        echo "s3.aws-secret-key=$AWS_SECRET_ACCESS_KEY" >> "$GLUE_CATALOG_CONFIG"
+
+        echo "hive.metastore.glue.aws-access-key=$AWS_ACCESS_KEY_ID" >> "$GLUE_CATALOG_CONFIG"
+        echo "hive.metastore.glue.aws-secret-key=$AWS_SECRET_ACCESS_KEY" >> "$GLUE_CATALOG_CONFIG"
+      fi
+
+      ############## BLOCK TO BE REMOVED ##############
       # add AWS creds to hive catalog properties
-      HIVE_CATALOG_CONFIG="${TRINO_HOME}/catalog/hive.properties"
+      HIVE_CATALOG_CONFIG="$TRINO_HOME/catalog/hive.properties"
       # ensure there's a newline between the last item in the config and what we add
       echo "" >> $HIVE_CATALOG_CONFIG
       if ! grep -q -F 's3.aws-access-key' "$HIVE_CATALOG_CONFIG"; then
         echo "Adding s3.aws-access-key and s3.aws-secret-key to $HIVE_CATALOG_CONFIG"
-        echo "s3.aws-access-key=$AWS_ACCESS_KEY_ID" >> "$HIVE_CATALOG_CONFIG"
-        echo "s3.aws-secret-key=$AWS_SECRET_ACCESS_KEY" >> "$HIVE_CATALOG_CONFIG"
-        echo "s3.endpoint=$S3_ENDPOINT" >> "$HIVE_CATALOG_CONFIG"
-        if [[ $OBJECTSTORE_TLS == *"false"* ]]; then
+        echo "s3.aws-access-key=$HIVE_AWS_ACCESS_KEY_ID" >> "$HIVE_CATALOG_CONFIG"
+        echo "s3.aws-secret-key=$HIVE_AWS_SECRET_ACCESS_KEY" >> "$HIVE_CATALOG_CONFIG"
+        echo "s3.endpoint=$HIVE_S3_ENDPOINT" >> "$HIVE_CATALOG_CONFIG"
+        if [[ $HIVE_OBJECTSTORE_TLS == *"false"* ]]; then
           echo "s3.sse.type=None" >> "$HIVE_CATALOG_CONFIG"
         fi
       fi
+      #################################################
 
       # add UID to /etc/passwd if missing
       if ! whoami &> /dev/null; then
@@ -133,11 +151,19 @@ objects:
               echo "Done adding user ${USER_NAME:-trino} with current UID $(id -u) to /etc/passwd"
           fi
       fi
+
+      ############## BLOCK TO BE REMOVED ##############
+      mv $HIVE_CATALOG_CONFIG "$TRINO_HOME/catalog/$HIVE_PROPERTIES_FILE.bak"
+      mv $GLUE_CATALOG_CONFIG "$TRINO_HOME/catalog/$GLUE_PROPERTIES_FILE.bak"
+      mv "$TRINO_HOME/catalog/$HIVE_PROPERTIES_FILE.bak" "$TRINO_HOME/catalog/$HIVE_PROPERTIES_FILE"
+      mv "$TRINO_HOME/catalog/$GLUE_PROPERTIES_FILE.bak" "$TRINO_HOME/catalog/$GLUE_PROPERTIES_FILE"
+      #################################################
+
       exec "$@"
 - apiVersion: v1
   kind: ConfigMap
   metadata:
-    name: trino-config-${CONFIGMAP_HASH}
+    name: trino-config
     labels:
       app: trino
   data:
@@ -265,7 +291,7 @@ objects:
 - apiVersion: v1
   kind: ConfigMap
   metadata:
-    name: trino-config-catalog-${CONFIGMAP_HASH}
+    name: trino-config-catalog
     labels:
       app: trino
   data:
@@ -358,6 +384,24 @@ objects:
       fs.native-s3.enabled=true
       s3.path-style-access=true
       s3.region=us-east-1
+    glue.properties: |-
+      connector.name=hive
+      hive.metastore=glue
+      hive.collect-column-statistics-on-write=true
+      hive.compression-codec=SNAPPY
+      hive.max-partitions-per-scan=${HIVE_PARTITION_LIMIT}
+      hive.non-managed-table-writes-enabled=true
+      hive.partition-statistics-sample-size=${HIVE_PARTITION_STATS_SAMPLE_SIZE}
+      hive.parquet.use-column-names=true
+      hive.recursive-directories=true
+      hive.storage-format=Parquet
+      fs.native-s3.enabled=true
+      s3.path-style-access=true
+      s3.region=${S3_REGION}
+      s3.endpoint=${S3_ENDPOINT}
+      hive.metastore.glue.default-warehouse-dir=s3://${S3_BUCKET_NAME}/${WAREHOUSE_DIR}
+      hive.metastore.glue.region=${S3_REGION}
+      hive.metastore.glue.catalogid=${AWS_CATALOG_ID}
     blackhole.propeties: |-
       connector.name=blackhole
     jmx.properties: |-
@@ -417,8 +461,22 @@ objects:
               fieldRef:
                 apiVersion: v1
                 fieldPath: metadata.namespace
-          - name: S3_DATA_DIR
-            value: 'data'
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: aws-access-key-id
+                name: koku-aws
+                optional: false
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: aws-secret-access-key
+                name: koku-aws
+                optional: false
+          - name: HIVE_PROPERTIES_FILE
+            value: ${HIVE_PROPERTIES_FILE}
+          - name: GLUE_PROPERTIES_FILE
+            value: ${GLUE_PROPERTIES_FILE}
           - name: QUERY_MAX_MEMORY_PER_NODE
             value: ${QUERY_MAX_MEMORY_PER_NODE}
           - name: QUERY_MAX_MEMORY
@@ -460,17 +518,17 @@ objects:
         volumes:
           - name: trino-scripts
             configMap:
-              name: trino-scripts-${CONFIGMAP_HASH}
+              name: trino-scripts
               items:
               - key: entrypoint.sh
                 path: entrypoint.sh
                 mode: 509
           - name: trino-config
             configMap:
-              name: trino-config-${CONFIGMAP_HASH}
+              name: trino-config
           - name: trino-config-catalog
             configMap:
-              name: trino-config-catalog-${CONFIGMAP_HASH}
+              name: trino-config-catalog
           - name: trino-etc
             emptyDir: {}
           - name: trino-data
@@ -532,8 +590,22 @@ objects:
               fieldRef:
                 apiVersion: v1
                 fieldPath: metadata.namespace
-          - name: S3_DATA_DIR
-            value: 'data'
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: aws-access-key-id
+                name: koku-aws
+                optional: false
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: aws-secret-access-key
+                name: koku-aws
+                optional: false
+          - name: HIVE_PROPERTIES_FILE
+            value: ${HIVE_PROPERTIES_FILE}
+          - name: GLUE_PROPERTIES_FILE
+            value: ${GLUE_PROPERTIES_FILE}
           - name: QUERY_MAX_MEMORY_PER_NODE
             value: ${QUERY_MAX_MEMORY_PER_NODE}
           - name: QUERY_MAX_MEMORY
@@ -581,17 +653,17 @@ objects:
         volumes:
           - name: trino-scripts
             configMap:
-              name: trino-scripts-${CONFIGMAP_HASH}
+              name: trino-scripts
               items:
               - key: entrypoint.sh
                 path: entrypoint.sh
                 mode: 509
           - name: trino-config
             configMap:
-              name: trino-config-${CONFIGMAP_HASH}
+              name: trino-config
           - name: trino-config-catalog
             configMap:
-              name: trino-config-catalog-${CONFIGMAP_HASH}
+              name: trino-config-catalog
           - name: trino-etc
             emptyDir: {}
           - name: trino-data
@@ -635,10 +707,8 @@ parameters:
   required: true
 - name: ENV_NAME
   required: false
-- name: S3_BUCKET_NAME
-  value: 'hccm-s3'
 - name: NODE_ENV
-  value: 'production'
+  value: production
 - name: MACHINE_POOL_OPTION
   value: ''
 - name: TRINO_HISTORY_FILE
@@ -704,6 +774,26 @@ parameters:
   name: MAX_HEAP_SIZE
   value: '3G'
 
+# Glue or Hive config files
+# when transitioning to Glue, swap these values
+# once fully transitioned, these can be removed entirely, and the glue.properties becomes hive.properties
+- name: HIVE_PROPERTIES_FILE
+  value: hive.properties
+- name: GLUE_PROPERTIES_FILE
+  value: glue.properties
+
+# AWS params
+- name: S3_ENDPOINT
+  value: https://s3.us-east-1.amazonaws.com
+- name: S3_REGION
+  value: us-east-1
+- name: S3_BUCKET_NAME
+  value: hccm-s3
+- name: WAREHOUSE_DIR
+  value: data
+- name: AWS_CATALOG_ID
+  value: '589173575009'
+
 # Trino configruation Params
 - description: Max amount of user memory a query can use on a worker (Trino default - JVM max memory * 0.3)
   displayName: query.max-memory-per-node
@@ -727,11 +817,11 @@ parameters:
   required: true
 
 # Trino Hive config
-- description: Socket connect timeout for metastore client
+- description: Socket connect timeout for metastore client - TO BE REMOVED
   displayName: hive.metastore.thrift.client.connect-timeout
   name: METASTORE_READ_TIMEOUT
   value: '300s'
-- description: Socket read timeout for metastore client
+- description: Socket read timeout for metastore client - TO BE REMOVED
   displayName: hive.metastore.thrift.client.read-timeout
   name: METASTORE_TIMEOUT
   value: '300s'
@@ -764,8 +854,3 @@ parameters:
   displayName: livenessPeriodSeconds
   name: LIVENESS_PROBE_PERIOD
   value: '120'
-
-# Configmap updater
-- name: CONFIGMAP_HASH
-  description: "The random hash to change the configmap names"
-  value: '000001'
