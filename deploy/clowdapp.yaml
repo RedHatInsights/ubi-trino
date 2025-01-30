@@ -58,7 +58,7 @@ objects:
 
         export S3_AWS_ACCESS_KEY_ID=$(jq -r '.objectStore.buckets[0].accessKey' ${ACG_CONFIG})
         export S3_AWS_SECRET_ACCESS_KEY=$(jq -r '.objectStore.buckets[0].secretKey' ${ACG_CONFIG})
-        export HIVE_S3_BUCKET_NAME=$(jq -r '.objectStore.buckets[0].requestedName' ${ACG_CONFIG})
+        export S3_BUCKET_NAME=$(jq -r '.objectStore.buckets[0].requestedName' ${ACG_CONFIG})
 
         OBJECTSTORE_HOST=$(jq -r '.objectStore.hostname' ${ACG_CONFIG})
         OBJECTSTORE_PORT=$(jq -r '.objectStore.port' ${ACG_CONFIG})
@@ -116,6 +116,7 @@ objects:
 
         echo "hive.metastore.glue.aws-access-key=$AWS_ACCESS_KEY_ID" >> "$GLUE_CATALOG_CONFIG"
         echo "hive.metastore.glue.aws-secret-key=$AWS_SECRET_ACCESS_KEY" >> "$GLUE_CATALOG_CONFIG"
+        echo "hive.metastore.glue.default-warehouse-dir={TRINO_S3A_OR_S3}://${S3_BUCKET_NAME}/data" >> "$GLUE_CATALOG_CONFIG"
       fi
 
       ############## BLOCK TO BE REMOVED ##############
@@ -398,7 +399,6 @@ objects:
       fs.native-s3.enabled=true
       s3.path-style-access=true
       s3.region=${S3_REGION}
-      hive.metastore.glue.default-warehouse-dir={TRINO_S3A_OR_S3}://${S3_BUCKET_NAME}/${WAREHOUSE_DIR}
       hive.metastore.glue.region=${S3_REGION}
       hive.metastore.glue.catalogid=${AWS_CATALOG_ID}
     blackhole.propeties: |-
@@ -794,8 +794,6 @@ parameters:
   value: us-east-1
 - name: S3_BUCKET_NAME
   value: hccm-s3
-- name: WAREHOUSE_DIR
-  value: data
 - name: AWS_CATALOG_ID
   value: '589173575009'
 
