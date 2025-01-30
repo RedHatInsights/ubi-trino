@@ -65,7 +65,7 @@ objects:
         OBJECTSTORE_TLS=$(jq -r '.objectStore.tls' ${ACG_CONFIG})
 
         export URI_PREFIX=https
-        if [[ $HIVE_OBJECTSTORE_TLS == *"false"* ]]; then
+        if [[ $OBJECTSTORE_TLS == *"false"* ]]; then
           export URI_PREFIX=http
         fi
 
