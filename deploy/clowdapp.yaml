@@ -56,26 +56,25 @@ objects:
           export PGSSLROOTCERT=$temp_file
         fi
 
-        ############## BLOCK TO BE REMOVED ##############
-        export HIVE_AWS_ACCESS_KEY_ID=$(jq -r '.objectStore.buckets[0].accessKey' ${ACG_CONFIG})
-        export HIVE_AWS_SECRET_ACCESS_KEY=$(jq -r '.objectStore.buckets[0].secretKey' ${ACG_CONFIG})
-        export HIVE_S3_BUCKET_NAME=$(jq -r '.objectStore.buckets[0].requestedName' ${ACG_CONFIG})
+        export S3_AWS_ACCESS_KEY_ID=$(jq -r '.objectStore.buckets[0].accessKey' ${ACG_CONFIG})
+        export S3_AWS_SECRET_ACCESS_KEY=$(jq -r '.objectStore.buckets[0].secretKey' ${ACG_CONFIG})
+        export S3_BUCKET_NAME=$(jq -r '.objectStore.buckets[0].requestedName' ${ACG_CONFIG})
 
-        HIVE_OBJECTSTORE_HOST=$(jq -r '.objectStore.hostname' ${ACG_CONFIG})
-        HIVE_OBJECTSTORE_PORT=$(jq -r '.objectStore.port' ${ACG_CONFIG})
-        HIVE_OBJECTSTORE_TLS=$(jq -r '.objectStore.tls' ${ACG_CONFIG})
+        OBJECTSTORE_HOST=$(jq -r '.objectStore.hostname' ${ACG_CONFIG})
+        OBJECTSTORE_PORT=$(jq -r '.objectStore.port' ${ACG_CONFIG})
+        OBJECTSTORE_TLS=$(jq -r '.objectStore.tls' ${ACG_CONFIG})
 
-        export HIVE_URI_PREFIX=https
-        if [[ $HIVE_OBJECTSTORE_TLS == *"false"* ]]; then
-          export HIVE_URI_PREFIX=http
+        export URI_PREFIX=https
+        if [[ $OBJECTSTORE_TLS == *"false"* ]]; then
+          export URI_PREFIX=http
         fi
 
-        HIVE_S3_ENDPOINT="${HIVE_URI_PREFIX}://${HIVE_OBJECTSTORE_HOST}"
-        if [[ -n "${HIVE_OBJECTSTORE_PORT}" ]] && [[ "${HIVE_OBJECTSTORE_PORT}" != "null" ]]; then
-          HIVE_S3_ENDPOINT="${HIVE_S3_ENDPOINT}:${HIVE_OBJECTSTORE_PORT}"
+        S3_ENDPOINT="${URI_PREFIX}://${OBJECTSTORE_HOST}"
+        if [[ -n "${OBJECTSTORE_PORT}" ]] && [[ "${OBJECTSTORE_PORT}" != "null" ]]; then
+          S3_ENDPOINT="${S3_ENDPOINT}:${OBJECTSTORE_PORT}"
         fi
-        export HIVE_S3_ENDPOINT
-        #################################################
+        export S3_ENDPOINT
+
       fi
       echo "Copy config files to ${TRINO_HOME}/"
       cp -v -L -r -f /etc/trino-init/* ${TRINO_HOME}/
@@ -111,11 +110,13 @@ objects:
       if ! grep -q -F 's3.aws-access-key' "$GLUE_CATALOG_CONFIG"; then
         echo "Adding s3.aws-access-key and s3.aws-secret-key to $GLUE_CATALOG_CONFIG"
 
-        echo "s3.aws-access-key=$AWS_ACCESS_KEY_ID" >> "$GLUE_CATALOG_CONFIG"
-        echo "s3.aws-secret-key=$AWS_SECRET_ACCESS_KEY" >> "$GLUE_CATALOG_CONFIG"
+        echo "s3.aws-access-key=$S3_AWS_ACCESS_KEY_ID" >> "$GLUE_CATALOG_CONFIG"
+        echo "s3.aws-secret-key=$S3_AWS_SECRET_ACCESS_KEY" >> "$GLUE_CATALOG_CONFIG"
+        echo "s3.endpoint=$S3_ENDPOINT" >> "$GLUE_CATALOG_CONFIG"
 
         echo "hive.metastore.glue.aws-access-key=$AWS_ACCESS_KEY_ID" >> "$GLUE_CATALOG_CONFIG"
         echo "hive.metastore.glue.aws-secret-key=$AWS_SECRET_ACCESS_KEY" >> "$GLUE_CATALOG_CONFIG"
+        echo "hive.metastore.glue.default-warehouse-dir=$TRINO_S3A_OR_S3://$S3_BUCKET_NAME/data" >> "$GLUE_CATALOG_CONFIG"
       fi
 
       ############## BLOCK TO BE REMOVED ##############
@@ -125,9 +126,9 @@ objects:
       echo "" >> $HIVE_CATALOG_CONFIG
       if ! grep -q -F 's3.aws-access-key' "$HIVE_CATALOG_CONFIG"; then
         echo "Adding s3.aws-access-key and s3.aws-secret-key to $HIVE_CATALOG_CONFIG"
-        echo "s3.aws-access-key=$HIVE_AWS_ACCESS_KEY_ID" >> "$HIVE_CATALOG_CONFIG"
-        echo "s3.aws-secret-key=$HIVE_AWS_SECRET_ACCESS_KEY" >> "$HIVE_CATALOG_CONFIG"
-        echo "s3.endpoint=$HIVE_S3_ENDPOINT" >> "$HIVE_CATALOG_CONFIG"
+        echo "s3.aws-access-key=$S3_AWS_ACCESS_KEY_ID" >> "$HIVE_CATALOG_CONFIG"
+        echo "s3.aws-secret-key=$S3_AWS_SECRET_ACCESS_KEY" >> "$HIVE_CATALOG_CONFIG"
+        echo "s3.endpoint=$S3_ENDPOINT" >> "$HIVE_CATALOG_CONFIG"
         if [[ $HIVE_OBJECTSTORE_TLS == *"false"* ]]; then
           echo "s3.sse.type=None" >> "$HIVE_CATALOG_CONFIG"
         fi
@@ -398,8 +399,6 @@ objects:
       fs.native-s3.enabled=true
       s3.path-style-access=true
       s3.region=${S3_REGION}
-      s3.endpoint=${S3_ENDPOINT}
-      hive.metastore.glue.default-warehouse-dir=s3://${S3_BUCKET_NAME}/${WAREHOUSE_DIR}
       hive.metastore.glue.region=${S3_REGION}
       hive.metastore.glue.catalogid=${AWS_CATALOG_ID}
     blackhole.propeties: |-
@@ -465,14 +464,16 @@ objects:
             valueFrom:
               secretKeyRef:
                 key: aws-access-key-id
-                name: koku-aws
+                name: ${AWS_SECRET_NAME}
                 optional: false
           - name: AWS_SECRET_ACCESS_KEY
             valueFrom:
               secretKeyRef:
                 key: aws-secret-access-key
-                name: koku-aws
+                name: ${AWS_SECRET_NAME}
                 optional: false
+          - name: TRINO_S3A_OR_S3
+            value: ${TRINO_S3A_OR_S3}
           - name: HIVE_PROPERTIES_FILE
             value: ${HIVE_PROPERTIES_FILE}
           - name: GLUE_PROPERTIES_FILE
@@ -594,14 +595,16 @@ objects:
             valueFrom:
               secretKeyRef:
                 key: aws-access-key-id
-                name: koku-aws
+                name: ${AWS_SECRET_NAME}
                 optional: false
           - name: AWS_SECRET_ACCESS_KEY
             valueFrom:
               secretKeyRef:
                 key: aws-secret-access-key
-                name: koku-aws
+                name: ${AWS_SECRET_NAME}
                 optional: false
+          - name: TRINO_S3A_OR_S3
+            value: ${TRINO_S3A_OR_S3}
           - name: HIVE_PROPERTIES_FILE
             value: ${HIVE_PROPERTIES_FILE}
           - name: GLUE_PROPERTIES_FILE
@@ -713,6 +716,8 @@ parameters:
   value: ''
 - name: TRINO_HISTORY_FILE
   value: /data/trino/data/.trino_history
+- name: AWS_SECRET_NAME
+  value: koku-aws
 
 # Coordinator Params
 - description: Number of replicas for the coordinator
@@ -781,16 +786,14 @@ parameters:
   value: hive.properties
 - name: GLUE_PROPERTIES_FILE
   value: glue.properties
+- name: TRINO_S3A_OR_S3
+  value: s3a
 
 # AWS params
-- name: S3_ENDPOINT
-  value: https://s3.us-east-1.amazonaws.com
 - name: S3_REGION
   value: us-east-1
 - name: S3_BUCKET_NAME
   value: hccm-s3
-- name: WAREHOUSE_DIR
-  value: data
 - name: AWS_CATALOG_ID
   value: '589173575009'
 
