@@ -117,6 +117,8 @@ objects:
         echo "hive.metastore.glue.aws-access-key=$AWS_ACCESS_KEY_ID" >> "$GLUE_CATALOG_CONFIG"
         echo "hive.metastore.glue.aws-secret-key=$AWS_SECRET_ACCESS_KEY" >> "$GLUE_CATALOG_CONFIG"
         echo "hive.metastore.glue.default-warehouse-dir=$TRINO_S3A_OR_S3://$S3_BUCKET_NAME/data" >> "$GLUE_CATALOG_CONFIG"
+        echo "hive.metastore.glue.iam-role=$AWS_ASSUME_ROLE_ARN" >> "$GLUE_CATALOG_CONFIG"
+        echo "hive.metastore.glue.catalogid=$AWS_CATALOG_ID" >> "$GLUE_CATALOG_CONFIG"
       fi
 
       ############## BLOCK TO BE REMOVED ##############
@@ -400,8 +402,6 @@ objects:
       s3.path-style-access=true
       s3.region=${AWS_REGION}
       hive.metastore.glue.region=${AWS_REGION}
-      hive.metastore.glue.catalogid=${AWS_CATALOG_ID}
-      hive.metastore.glue.iam-role=${AWS_ASSUME_ROLE_ARN}
     blackhole.propeties: |-
       connector.name=blackhole
     jmx.properties: |-
@@ -479,6 +479,8 @@ objects:
                 key: role_arn
                 name: ${AWS_ASSUME_ROLE_ARN_SECRET_NAME}
                 optional: false
+          - name: AWS_CATALOG_ID
+            value: ${AWS_CATALOG_ID}
           - name: AWS_REGION
             value: ${AWS_REGION}
           - name: TRINO_S3A_OR_S3
@@ -618,6 +620,8 @@ objects:
                 key: role_arn
                 name: ${AWS_ASSUME_ROLE_ARN_SECRET_NAME}
                 optional: false
+          - name: AWS_CATALOG_ID
+            value: ${AWS_CATALOG_ID}
           - name: AWS_REGION
             value: ${AWS_REGION}
           - name: TRINO_S3A_OR_S3
