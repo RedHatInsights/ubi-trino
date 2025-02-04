@@ -401,6 +401,7 @@ objects:
       s3.region=${S3_REGION}
       hive.metastore.glue.region=${S3_REGION}
       hive.metastore.glue.catalogid=${AWS_CATALOG_ID}
+      hive.metastore.glue.iam-role=${AWS_ASSUME_ROLE_ARN}
     blackhole.propeties: |-
       connector.name=blackhole
     jmx.properties: |-
@@ -463,14 +464,20 @@ objects:
           - name: AWS_ACCESS_KEY_ID
             valueFrom:
               secretKeyRef:
-                key: aws-access-key-id
+                key: aws_access_key_id
                 name: ${AWS_SECRET_NAME}
                 optional: false
           - name: AWS_SECRET_ACCESS_KEY
             valueFrom:
               secretKeyRef:
-                key: aws-secret-access-key
+                key: aws_secret_access_key
                 name: ${AWS_SECRET_NAME}
+                optional: false
+          - name: AWS_ASSUME_ROLE_ARN
+            valueFrom:
+              secretKeyRef:
+                key: role_arn
+                name: ${AWS_ASSUME_ROLE_ARN_SECRET_NAME}
                 optional: false
           - name: TRINO_S3A_OR_S3
             value: ${TRINO_S3A_OR_S3}
@@ -594,14 +601,20 @@ objects:
           - name: AWS_ACCESS_KEY_ID
             valueFrom:
               secretKeyRef:
-                key: aws-access-key-id
+                key: aws_access_key_id
                 name: ${AWS_SECRET_NAME}
                 optional: false
           - name: AWS_SECRET_ACCESS_KEY
             valueFrom:
               secretKeyRef:
-                key: aws-secret-access-key
+                key: aws_secret_access_key
                 name: ${AWS_SECRET_NAME}
+                optional: false
+          - name: AWS_ASSUME_ROLE_ARN
+            valueFrom:
+              secretKeyRef:
+                key: role_arn
+                name: ${AWS_ASSUME_ROLE_ARN_SECRET_NAME}
                 optional: false
           - name: TRINO_S3A_OR_S3
             value: ${TRINO_S3A_OR_S3}
@@ -717,6 +730,8 @@ parameters:
 - name: TRINO_HISTORY_FILE
   value: /data/trino/data/.trino_history
 - name: AWS_SECRET_NAME
+  value: koku-aws
+- name: AWS_ASSUME_ROLE_ARN_SECRET_NAME
   value: koku-aws
 
 # Coordinator Params
