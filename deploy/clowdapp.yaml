@@ -398,8 +398,8 @@ objects:
       hive.storage-format=Parquet
       fs.native-s3.enabled=true
       s3.path-style-access=true
-      s3.region=${S3_REGION}
-      hive.metastore.glue.region=${S3_REGION}
+      s3.region=${AWS_REGION}
+      hive.metastore.glue.region=${AWS_REGION}
       hive.metastore.glue.catalogid=${AWS_CATALOG_ID}
       hive.metastore.glue.iam-role=${AWS_ASSUME_ROLE_ARN}
     blackhole.propeties: |-
@@ -479,6 +479,8 @@ objects:
                 key: role_arn
                 name: ${AWS_ASSUME_ROLE_ARN_SECRET_NAME}
                 optional: false
+          - name: AWS_REGION
+            value: ${AWS_REGION}
           - name: TRINO_S3A_OR_S3
             value: ${TRINO_S3A_OR_S3}
           - name: HIVE_PROPERTIES_FILE
@@ -616,6 +618,8 @@ objects:
                 key: role_arn
                 name: ${AWS_ASSUME_ROLE_ARN_SECRET_NAME}
                 optional: false
+          - name: AWS_REGION
+            value: ${AWS_REGION}
           - name: TRINO_S3A_OR_S3
             value: ${TRINO_S3A_OR_S3}
           - name: HIVE_PROPERTIES_FILE
@@ -805,12 +809,12 @@ parameters:
   value: s3a
 
 # AWS params
-- name: S3_REGION
-  value: us-east-1
 - name: S3_BUCKET_NAME
   value: hccm-s3
 - name: AWS_CATALOG_ID
   value: '589173575009'
+- name: AWS_REGION
+  value: us-east-1
 
 # Trino configruation Params
 - description: Max amount of user memory a query can use on a worker (Trino default - JVM max memory * 0.3)
