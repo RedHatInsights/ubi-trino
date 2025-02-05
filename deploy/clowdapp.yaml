@@ -117,6 +117,8 @@ objects:
         echo "hive.metastore.glue.aws-access-key=$AWS_ACCESS_KEY_ID" >> "$GLUE_CATALOG_CONFIG"
         echo "hive.metastore.glue.aws-secret-key=$AWS_SECRET_ACCESS_KEY" >> "$GLUE_CATALOG_CONFIG"
         echo "hive.metastore.glue.default-warehouse-dir=$TRINO_S3A_OR_S3://$S3_BUCKET_NAME/data" >> "$GLUE_CATALOG_CONFIG"
+        echo "hive.metastore.glue.iam-role=$AWS_ASSUME_ROLE_ARN" >> "$GLUE_CATALOG_CONFIG"
+        echo "hive.metastore.glue.catalogid=$AWS_CATALOG_ID" >> "$GLUE_CATALOG_CONFIG"
       fi
 
       ############## BLOCK TO BE REMOVED ##############
@@ -398,9 +400,8 @@ objects:
       hive.storage-format=Parquet
       fs.native-s3.enabled=true
       s3.path-style-access=true
-      s3.region=${S3_REGION}
-      hive.metastore.glue.region=${S3_REGION}
-      hive.metastore.glue.catalogid=${AWS_CATALOG_ID}
+      s3.region=${AWS_REGION}
+      hive.metastore.glue.region=${AWS_REGION}
     blackhole.propeties: |-
       connector.name=blackhole
     jmx.properties: |-
@@ -463,15 +464,25 @@ objects:
           - name: AWS_ACCESS_KEY_ID
             valueFrom:
               secretKeyRef:
-                key: aws-access-key-id
+                key: aws_access_key_id
                 name: ${AWS_SECRET_NAME}
                 optional: false
           - name: AWS_SECRET_ACCESS_KEY
             valueFrom:
               secretKeyRef:
-                key: aws-secret-access-key
+                key: aws_secret_access_key
                 name: ${AWS_SECRET_NAME}
                 optional: false
+          - name: AWS_ASSUME_ROLE_ARN
+            valueFrom:
+              secretKeyRef:
+                key: role_arn
+                name: ${AWS_ASSUME_ROLE_ARN_SECRET_NAME}
+                optional: false
+          - name: AWS_CATALOG_ID
+            value: ${AWS_CATALOG_ID}
+          - name: AWS_REGION
+            value: ${AWS_REGION}
           - name: TRINO_S3A_OR_S3
             value: ${TRINO_S3A_OR_S3}
           - name: HIVE_PROPERTIES_FILE
@@ -594,15 +605,25 @@ objects:
           - name: AWS_ACCESS_KEY_ID
             valueFrom:
               secretKeyRef:
-                key: aws-access-key-id
+                key: aws_access_key_id
                 name: ${AWS_SECRET_NAME}
                 optional: false
           - name: AWS_SECRET_ACCESS_KEY
             valueFrom:
               secretKeyRef:
-                key: aws-secret-access-key
+                key: aws_secret_access_key
                 name: ${AWS_SECRET_NAME}
                 optional: false
+          - name: AWS_ASSUME_ROLE_ARN
+            valueFrom:
+              secretKeyRef:
+                key: role_arn
+                name: ${AWS_ASSUME_ROLE_ARN_SECRET_NAME}
+                optional: false
+          - name: AWS_CATALOG_ID
+            value: ${AWS_CATALOG_ID}
+          - name: AWS_REGION
+            value: ${AWS_REGION}
           - name: TRINO_S3A_OR_S3
             value: ${TRINO_S3A_OR_S3}
           - name: HIVE_PROPERTIES_FILE
@@ -718,6 +739,8 @@ parameters:
   value: /data/trino/data/.trino_history
 - name: AWS_SECRET_NAME
   value: koku-aws
+- name: AWS_ASSUME_ROLE_ARN_SECRET_NAME
+  value: koku-aws
 
 # Coordinator Params
 - description: Number of replicas for the coordinator
@@ -790,12 +813,12 @@ parameters:
   value: s3a
 
 # AWS params
-- name: S3_REGION
-  value: us-east-1
 - name: S3_BUCKET_NAME
   value: hccm-s3
 - name: AWS_CATALOG_ID
   value: '589173575009'
+- name: AWS_REGION
+  value: us-east-1
 
 # Trino configruation Params
 - description: Max amount of user memory a query can use on a worker (Trino default - JVM max memory * 0.3)
