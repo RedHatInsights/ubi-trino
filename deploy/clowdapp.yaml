@@ -117,7 +117,6 @@ objects:
         echo "hive.metastore.glue.aws-access-key=$AWS_ACCESS_KEY_ID" >> "$GLUE_CATALOG_CONFIG"
         echo "hive.metastore.glue.aws-secret-key=$AWS_SECRET_ACCESS_KEY" >> "$GLUE_CATALOG_CONFIG"
         echo "hive.metastore.glue.default-warehouse-dir=$TRINO_S3A_OR_S3://$S3_BUCKET_NAME/data" >> "$GLUE_CATALOG_CONFIG"
-        echo "hive.metastore.glue.iam-role=$AWS_ASSUME_ROLE_ARN" >> "$GLUE_CATALOG_CONFIG"
       fi
 
       ############## BLOCK TO BE REMOVED ##############
@@ -472,12 +471,6 @@ objects:
                 key: aws_secret_access_key
                 name: ${AWS_SECRET_NAME}
                 optional: false
-          - name: AWS_ASSUME_ROLE_ARN
-            valueFrom:
-              secretKeyRef:
-                key: role_arn
-                name: ${AWS_ASSUME_ROLE_ARN_SECRET_NAME}
-                optional: false
           - name: AWS_REGION
             value: ${AWS_REGION}
           - name: TRINO_S3A_OR_S3
@@ -611,12 +604,6 @@ objects:
                 key: aws_secret_access_key
                 name: ${AWS_SECRET_NAME}
                 optional: false
-          - name: AWS_ASSUME_ROLE_ARN
-            valueFrom:
-              secretKeyRef:
-                key: role_arn
-                name: ${AWS_ASSUME_ROLE_ARN_SECRET_NAME}
-                optional: false
           - name: AWS_REGION
             value: ${AWS_REGION}
           - name: TRINO_S3A_OR_S3
@@ -733,8 +720,6 @@ parameters:
 - name: TRINO_HISTORY_FILE
   value: /data/trino/data/.trino_history
 - name: AWS_SECRET_NAME
-  value: koku-aws
-- name: AWS_ASSUME_ROLE_ARN_SECRET_NAME
   value: koku-aws
 
 # Coordinator Params
