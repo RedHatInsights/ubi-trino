@@ -36,7 +36,7 @@ RUN curl --progress-bar --location --fail --show-error ${SERVER_LOCATION} | tar 
 ARG to_delete="/TO_DELETE"
 RUN mkdir ${to_delete} \
     && mv ${WORK_DIR}/trino-server-${TRINO_VERSION}/plugin/* ${to_delete} \
-    && mv ${to_delete}/{hive,blackhole,jmx,memory,postgresql,tpcds,tpch} ${WORK_DIR}/trino-server-${TRINO_VERSION}/plugin/. \
+    && mv ${to_delete}/{hive,blackhole,jmx,memory,postgresql,tpcds,tpch,trino-geospatial} ${WORK_DIR}/trino-server-${TRINO_VERSION}/plugin/. \
     && rm -rf ${to_delete}
 ###########################
 
