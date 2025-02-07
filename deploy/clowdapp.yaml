@@ -400,6 +400,7 @@ objects:
       s3.path-style-access=true
       s3.region=${AWS_REGION}
       hive.metastore.glue.region=${AWS_REGION}
+      hive.metastore.glue.skip-archive=true
     blackhole.propeties: |-
       connector.name=blackhole
     jmx.properties: |-
