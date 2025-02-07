@@ -1,6 +1,6 @@
-ARG JDK_VERSION=jdk-23.0.1+11  # https://api.adoptium.net/v3/info/release_names?image_type=jdk&page=0&page_size=100&project=jdk&release_type=ga&semver=false&sort_method=DEFAULT&sort_order=DESC&vendor=eclipse
-ARG PROMETHEUS_VERSION=0.20.0
-ARG TRINO_VERSION=461
+ARG JDK_VERSION=jdk-23.0.2+7  # https://api.adoptium.net/v3/info/release_names?image_type=jdk&page=0&page_size=100&project=jdk&release_type=ga&semver=false&sort_method=DEFAULT&sort_order=DESC&vendor=eclipse
+ARG PROMETHEUS_VERSION=1.0.1
+ARG TRINO_VERSION=470
 ARG WORK_DIR="/tmp"
 
 FROM registry.access.redhat.com/ubi9/ubi-minimal:latest as downloader
@@ -32,11 +32,11 @@ RUN curl --progress-bar --location --fail --show-error ${SERVER_LOCATION} | tar 
 
 ###########################
 # Remove all unused plugins
-# Only hive, blackhole, jmx, memory, postgresql, tpcds, and tpch are configured plugins.
+# Only hive, jmx, memory, postgresql, and geospatial are configured plugins (geospatial is required for postgresql).
 ARG to_delete="/TO_DELETE"
 RUN mkdir ${to_delete} \
     && mv ${WORK_DIR}/trino-server-${TRINO_VERSION}/plugin/* ${to_delete} \
-    && mv ${to_delete}/{hive,blackhole,jmx,memory,postgresql,tpcds,tpch} ${WORK_DIR}/trino-server-${TRINO_VERSION}/plugin/. \
+    && mv ${to_delete}/{hive,jmx,memory,postgresql,geospatial} ${WORK_DIR}/trino-server-${TRINO_VERSION}/plugin/. \
     && rm -rf ${to_delete}
 ###########################
 
@@ -69,10 +69,8 @@ RUN set -eux \
     && microdnf install -y --nodocs --setopt install_weak_deps=0 \
         jq \
         less \
-        python3 \
         shadow-utils \
-    && microdnf clean all \
-    && update-alternatives --install /usr/bin/python python /usr/bin/python3 1
+    && microdnf clean all
 
 # Add user and directories
 RUN groupadd trino --gid 1000 \
