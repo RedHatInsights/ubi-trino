@@ -32,11 +32,11 @@ RUN curl --progress-bar --location --fail --show-error ${SERVER_LOCATION} | tar 
 
 ###########################
 # Remove all unused plugins
-# Only hive, blackhole, jmx, memory, postgresql, tpcds, and tpch are configured plugins.
+# Only hive, jmx, memory, postgresql, and geospatial are configured plugins (geospatial is required for postgresql).
 ARG to_delete="/TO_DELETE"
 RUN mkdir ${to_delete} \
     && mv ${WORK_DIR}/trino-server-${TRINO_VERSION}/plugin/* ${to_delete} \
-    && mv ${to_delete}/{hive,blackhole,jmx,memory,postgresql,tpcds,tpch,geospatial} ${WORK_DIR}/trino-server-${TRINO_VERSION}/plugin/. \
+    && mv ${to_delete}/{hive,jmx,memory,postgresql,geospatial} ${WORK_DIR}/trino-server-${TRINO_VERSION}/plugin/. \
     && rm -rf ${to_delete}
 ###########################
 

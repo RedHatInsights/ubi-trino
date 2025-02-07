@@ -401,16 +401,10 @@ objects:
       s3.region=${AWS_REGION}
       hive.metastore.glue.region=${AWS_REGION}
       hive.metastore.glue.skip-archive=true
-    blackhole.propeties: |-
-      connector.name=blackhole
     jmx.properties: |-
       connector.name=jmx
     memory.properties: |-
       connector.name=memory
-    tpcds.properties: |-
-      connector.name=tpcds
-    tpch.properties: |-
-      connector.name=tpch
 
 - apiVersion: cloud.redhat.com/v1alpha1
   kind: ClowdApp
