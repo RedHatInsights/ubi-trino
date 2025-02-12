@@ -372,6 +372,7 @@ objects:
           type: GAUGE
     hive.properties: |-
       connector.name=hive
+      hive.auto-purge=true
       hive.collect-column-statistics-on-write=true
       hive.compression-codec=SNAPPY
       hive.metastore.authentication.type=NONE
@@ -388,6 +389,7 @@ objects:
     glue.properties: |-
       connector.name=hive
       hive.metastore=glue
+      hive.auto-purge=true
       hive.collect-column-statistics-on-write=true
       hive.compression-codec=SNAPPY
       hive.max-partitions-per-scan=${HIVE_PARTITION_LIMIT}
