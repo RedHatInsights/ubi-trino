@@ -19,7 +19,7 @@ metadata:
 
 spec:
   taskRunTemplate:
-    serviceAccountName: build-pipeline-koku-ci
+    serviceAccountName: build-pipeline-ubi-trino
 
   params:
     - name: git-url
