@@ -359,8 +359,8 @@ spec:
       - input: $(params.skip-checks)
         operator: in
         values:
-        - "false" 
-    
+        - "false"
+
     - name: sast-unicode-check
       params:
       - name: image-url
@@ -388,9 +388,10 @@ spec:
 
     - name: apply-tags
       params:
-        - name: IMAGE
+        - name: IMAGE_URL
           value: $(tasks.build-image-manifest.results.IMAGE_URL)
-
+        - name: IMAGE_DIGEST
+          value: $(tasks.build-image-manifest.results.IMAGE_DIGEST)
         - name: ADDITIONAL_TAGS
           value:
             - $(params.tag-prefix)$(tasks.clone-repository.results.short-commit)
