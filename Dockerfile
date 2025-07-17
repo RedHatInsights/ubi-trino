@@ -1,9 +1,11 @@
-ARG JDK_VERSION=jdk-23.0.2+7  # https://api.adoptium.net/v3/info/release_names?image_type=jdk&page=0&page_size=100&project=jdk&release_type=ga&semver=false&sort_method=DEFAULT&sort_order=DESC&vendor=eclipse
+ARG JDK_VERSION=jdk-24.0.1+9.1  # https://api.adoptium.net/v3/info/release_names?image_type=jdk&page=0&page_size=100&project=jdk&release_type=ga&semver=false&sort_method=DEFAULT&sort_order=DESC&vendor=eclipse
 ARG PROMETHEUS_VERSION=1.0.1
-ARG TRINO_VERSION=471
+ARG TRINO_VERSION=476
 ARG WORK_DIR="/tmp"
 
-FROM registry.access.redhat.com/ubi9/ubi-minimal:latest as downloader
+FROM ghcr.io/airlift/jvmkill:latest AS jvmkill
+
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest AS downloader
 
 ARG TARGETARCH
 ARG PROMETHEUS_VERSION
@@ -14,15 +16,20 @@ ARG PROMETHEUS_JMX_EXPORTER_LOCATION="https://repo1.maven.org/maven2/io/promethe
 ARG WORK_DIR
 ARG JDK_VERSION
 
-ENV JAVA_HOME=/usr/lib/jvm/${JDK_VERSION}
+ENV JAVA_HOME="/usr/lib/jvm/${JDK_VERSION}"
 
-RUN microdnf -y install tar gzip \
-    && microdnf clean all
+RUN \
+    set -xeuo pipefail && \
+    microdnf install -y tar gzip && \
+    # Install JDK from the provided archive link \
+    mkdir -p "${JAVA_HOME}" && \
+    case $TARGETARCH in arm64) PACKAGE_ARCH=aarch64;; amd64) PACKAGE_ARCH=x64; esac && \
+    JDK_DOWNLOAD_LINK="https://api.adoptium.net/v3/binary/version/${JDK_VERSION}/linux/${PACKAGE_ARCH}/jdk/hotspot/normal/eclipse?project=jdk" && \
+    echo "Downloading JDK from ${JDK_DOWNLOAD_LINK}" && \
+    curl -#LfS "${JDK_DOWNLOAD_LINK}" | tar -zx --strip 1 -C "${JAVA_HOME}" && \
+    microdnf clean all
 
-RUN mkdir -p "${JAVA_HOME}" \
-    && case $TARGETARCH in arm64) PACKAGE_ARCH=aarch64;; amd64) PACKAGE_ARCH=x64; esac \
-    && JDK_DOWNLOAD_LINK="https://api.adoptium.net/v3/binary/version/${JDK_VERSION}/linux/${PACKAGE_ARCH}/jdk/hotspot/normal/eclipse?project=jdk" \
-    && curl --progress-bar --location --fail --show-error "${JDK_DOWNLOAD_LINK}" | tar -xz --strip 1 -C "${JAVA_HOME}"
+
 
 RUN curl --progress-bar --location --fail --show-error ${SERVER_LOCATION} | tar -zxf - -C ${WORK_DIR} \
     && curl --progress-bar --location --fail --show-error --output ${WORK_DIR}/trino-cli-${TRINO_VERSION}-executable.jar ${CLIENT_LOCATION} \
@@ -42,7 +49,7 @@ RUN mkdir ${to_delete} \
 
 
 # Final container image:
-FROM registry.access.redhat.com/ubi9/ubi-minimal:latest as final
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest AS final
 
 ARG JDK_VERSION
 ARG PROMETHEUS_VERSION
@@ -50,7 +57,7 @@ ARG TRINO_VERSION
 ARG VERSION
 ARG WORK_DIR
 
-ENV JAVA_HOME=/usr/lib/jvm/${JDK_VERSION}
+ENV JAVA_HOME="/usr/lib/jvm/${JDK_VERSION}"
 ENV TRINO_HOME=/etc/trino
 ENV TRINO_HISTORY_FILE=/data/trino/.trino_history
 ENV PATH=${PATH}:${JAVA_HOME}/bin
@@ -62,7 +69,7 @@ LABEL io.openshift.tags="openshift"
 LABEL maintainer="<cost-mgmt@redhat.com>"
 LABEL version=${VERSION}
 
-COPY --from=downloader "${JAVA_HOME}" "${JAVA_HOME}"
+COPY --from=downloader $JAVA_HOME $JAVA_HOME
 
 RUN set -eux \
     && microdnf -y upgrade \
@@ -98,6 +105,7 @@ COPY --from=downloader ${WORK_DIR}/trino-cli-${TRINO_VERSION}-executable.jar /us
 COPY --from=downloader --chown=trino:trino ${WORK_DIR}/trino-server-${TRINO_VERSION} /usr/lib/trino
 COPY --chown=trino:trino bin/ /usr/lib/trino/
 COPY --chown=trino:trino default/etc $TRINO_HOME
+COPY --chown=trino:trino --from=jvmkill /libjvmkill.so /usr/lib/trino/bin
 COPY LICENSE /licenses/AGPL-1.0-or-later.txt
 
 EXPOSE 10000
