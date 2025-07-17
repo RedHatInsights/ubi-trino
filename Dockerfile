@@ -82,7 +82,7 @@ ARG VERSION
 ARG WORK_DIR
 
 ENV JAVA_HOME="/usr/lib/jvm/${JDK_VERSION}"
-
+ENV TRINO_HOME=/etc/trino
 ENV TRINO_HISTORY_FILE=/data/trino/.trino_history
 ENV PATH=${PATH}:${JAVA_HOME}/bin
 
@@ -123,7 +123,7 @@ COPY --from=downloader ${WORK_DIR}/trino-cli-${TRINO_VERSION}-executable.jar /us
 COPY --from=downloader --chown=trino:trino ${WORK_DIR}/trino-server-${TRINO_VERSION} /usr/lib/trino
 COPY --from=downloader --chown=trino:trino /libjvmkill.so /usr/lib/trino/bin
 COPY --chown=trino:trino bin/ /usr/lib/trino/bin/
-COPY --chown=trino:trino default/etc /etc/trino
+COPY --chown=trino:trino default/etc ${TRINO_HOME}
 COPY LICENSE /licenses/AGPL-1.0-or-later.txt
 
 EXPOSE 10000
