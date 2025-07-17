@@ -19,23 +19,6 @@ objects:
   data:
     entrypoint.sh: |
       #!/bin/bash
-      function importCert() {
-        PEM_FILE=$1
-        PASSWORD=$2
-        KEYSTORE=$3
-        # number of certs in the PEM file
-        CERTS=$(grep 'END CERTIFICATE' $PEM_FILE| wc -l)
-        # For every cert in the PEM file, extract it and import into the JKS keystore
-        # awk command: step 1, if line is in the desired cert, print the line
-        #              step 2, increment counter when last line of cert is found
-        for N in $(seq 0 $(($CERTS - 1))); do
-          ALIAS="${PEM_FILE%.*}-$N"
-          cat $PEM_FILE |
-            awk "n==$N { print }; /END CERTIFICATE/ { n++ }" |
-            keytool -noprompt -import -trustcacerts \
-                    -alias $ALIAS -keystore $KEYSTORE -storepass $PASSWORD
-        done
-      }
       set -e
 
       if [[ ! -z "${ACG_CONFIG}" ]]; then
@@ -87,13 +70,8 @@ objects:
         echo "postgresql.array-mapping=AS_ARRAY" >> ${TRINO_HOME}/catalog/postgres.properties
         echo "insert.non-transactional-insert.enabled=${NON_TRANSACTIONAL_INSERT}" >> ${TRINO_HOME}/catalog/postgres.properties
         echo "write.batch-size=${INSERT_BATCH_SIZE}" >> ${TRINO_HOME}/catalog/postgres.properties
+      fi
 
-      fi
-      # always add the openshift service-ca.crt if it exists
-      if [ -a /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt ]; then
-        echo "Adding /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt to $JAVA_HOME/lib/security/cacerts"
-        importCert /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt changeit $JAVA_HOME/lib/security/cacerts
-      fi
       # add node id to node config
       NODE_CONFIG="$TRINO_HOME/node.properties"
       # ensure there's a newline between the last item in the config and what we add
@@ -173,6 +151,7 @@ objects:
       security.config-file=/etc/trino/rules.json
     jvm.config: |-
       -server
+      -agentpath:/usr/lib/trino/bin/libjvmkill.so
       -Xmx${MAX_HEAP_SIZE}
       -XX:InitialRAMPercentage=80
       -XX:+UseContainerSupport
@@ -432,7 +411,7 @@ objects:
         command:
           - /etc/trino/scripts/entrypoint.sh
         args:
-          - /usr/lib/trino/run-trino
+          - /usr/lib/trino/bin/run-trino
           - --etc-dir=/etc/trino
           - --config=/etc/trino/config.properties.coordinator
         env:
@@ -565,7 +544,7 @@ objects:
         command:
           - /etc/trino/scripts/entrypoint.sh
         args:
-          - /usr/lib/trino/run-trino
+          - /usr/lib/trino/bin/run-trino
           - --etc-dir=/etc/trino
           - --config=/etc/trino/config.properties.worker
         env:
@@ -652,7 +631,7 @@ objects:
           preStop:
             exec:
               command:
-                - /usr/lib/trino/warm-shutdown
+                - /usr/lib/trino/bin/warm-shutdown
         volumes:
           - name: trino-scripts
             configMap:
