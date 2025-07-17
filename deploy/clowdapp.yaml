@@ -70,6 +70,7 @@ objects:
         echo "postgresql.array-mapping=AS_ARRAY" >> ${TRINO_HOME}/catalog/postgres.properties
         echo "insert.non-transactional-insert.enabled=${NON_TRANSACTIONAL_INSERT}" >> ${TRINO_HOME}/catalog/postgres.properties
         echo "write.batch-size=${INSERT_BATCH_SIZE}" >> ${TRINO_HOME}/catalog/postgres.properties
+      fi
 
       # add node id to node config
       NODE_CONFIG="$TRINO_HOME/node.properties"
