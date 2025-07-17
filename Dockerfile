@@ -1,4 +1,4 @@
-ARG JDK_VERSION=jdk-24.0.1+9.1  # https://api.adoptium.net/v3/info/release_names?image_type=jdk&page=0&page_size=100&project=jdk&release_type=ga&semver=false&sort_method=DEFAULT&sort_order=DESC&vendor=eclipse
+ARG JDK_VERSION=jdk-24.0.1+9  # https://api.adoptium.net/v3/info/release_names?image_type=jdk&page=0&page_size=100&project=jdk&release_type=ga&semver=false&sort_method=DEFAULT&sort_order=DESC&vendor=eclipse
 ARG PROMETHEUS_VERSION=1.0.1
 ARG TRINO_VERSION=476
 ARG WORK_DIR="/tmp"
