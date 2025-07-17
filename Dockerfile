@@ -3,8 +3,6 @@ ARG PROMETHEUS_VERSION=1.0.1
 ARG TRINO_VERSION=476
 ARG WORK_DIR="/tmp"
 
-FROM ghcr.io/airlift/jvmkill:latest AS jvmkill
-
 FROM registry.access.redhat.com/ubi9/ubi-minimal:latest AS downloader
 
 ARG TARGETARCH
@@ -20,7 +18,7 @@ ENV JAVA_HOME="/usr/lib/jvm/${JDK_VERSION}"
 
 RUN \
     set -xeuo pipefail && \
-    microdnf install -y tar gzip && \
+    microdnf install -y tar gzip gcc make git && \
     # Install JDK from the provided archive link \
     mkdir -p "${JAVA_HOME}" && \
     case $TARGETARCH in arm64) PACKAGE_ARCH=aarch64;; amd64) PACKAGE_ARCH=x64; esac && \
@@ -29,13 +27,21 @@ RUN \
     curl -#LfS "${JDK_DOWNLOAD_LINK}" | tar -zx --strip 1 -C "${JAVA_HOME}" && \
     microdnf clean all
 
+RUN \
+    set -xeuo pipefail && \
+    git clone https://github.com/airlift/jvmkill.git && \
+    cd jvmkill && \
+    make -C . && \
+    cp libjvmkill.so /libjvmkill.so
 
 
-RUN curl --progress-bar --location --fail --show-error ${SERVER_LOCATION} | tar -zxf - -C ${WORK_DIR} \
-    && curl --progress-bar --location --fail --show-error --output ${WORK_DIR}/trino-cli-${TRINO_VERSION}-executable.jar ${CLIENT_LOCATION} \
-    && chmod +x ${WORK_DIR}/trino-cli-${TRINO_VERSION}-executable.jar \
-    && curl --progress-bar --location --fail --show-error --output ${WORK_DIR}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar ${PROMETHEUS_JMX_EXPORTER_LOCATION} \
-    && chmod +x ${WORK_DIR}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar
+RUN \
+    set -xeuo pipefail && \
+    curl --progress-bar --location --fail --show-error ${SERVER_LOCATION} | tar -zxf - -C ${WORK_DIR} && \
+    curl --progress-bar --location --fail --show-error --output ${WORK_DIR}/trino-cli-${TRINO_VERSION}-executable.jar ${CLIENT_LOCATION} && \
+    chmod +x ${WORK_DIR}/trino-cli-${TRINO_VERSION}-executable.jar && \
+    curl --progress-bar --location --fail --show-error --output ${WORK_DIR}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar ${PROMETHEUS_JMX_EXPORTER_LOCATION} && \
+    chmod +x ${WORK_DIR}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar
 
 ###########################
 # Remove all unused plugins
@@ -115,9 +121,9 @@ RUN \
 COPY --from=downloader ${WORK_DIR}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar /usr/lib/trino/jmx_exporter.jar
 COPY --from=downloader ${WORK_DIR}/trino-cli-${TRINO_VERSION}-executable.jar /usr/bin/trino
 COPY --from=downloader --chown=trino:trino ${WORK_DIR}/trino-server-${TRINO_VERSION} /usr/lib/trino
-COPY --chown=trino:trino bin/ /usr/lib/trino/
+COPY --from=downloader --chown=trino:trino /libjvmkill.so /usr/lib/trino/bin
+COPY --chown=trino:trino bin/ /usr/lib/trino/bin/
 COPY --chown=trino:trino default/etc /etc/trino
-COPY --chown=trino:trino --from=jvmkill /libjvmkill.so /usr/lib/trino/bin
 COPY LICENSE /licenses/AGPL-1.0-or-later.txt
 
 EXPOSE 10000
