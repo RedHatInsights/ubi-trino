@@ -129,4 +129,4 @@ COPY LICENSE /licenses/AGPL-1.0-or-later.txt
 EXPOSE 10000
 USER trino:trino
 ENV LANG=en_US.UTF-8
-CMD ["/usr/lib/trino/run-trino"]
+CMD ["/usr/lib/trino/bin/run-trino"]

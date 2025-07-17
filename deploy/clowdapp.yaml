@@ -433,7 +433,7 @@ objects:
         command:
           - /etc/trino/scripts/entrypoint.sh
         args:
-          - /usr/lib/trino/run-trino
+          - /usr/lib/trino/bin/run-trino
           - --etc-dir=/etc/trino
           - --config=/etc/trino/config.properties.coordinator
         env:
@@ -566,7 +566,7 @@ objects:
         command:
           - /etc/trino/scripts/entrypoint.sh
         args:
-          - /usr/lib/trino/run-trino
+          - /usr/lib/trino/bin/run-trino
           - --etc-dir=/etc/trino
           - --config=/etc/trino/config.properties.worker
         env:
@@ -653,7 +653,7 @@ objects:
           preStop:
             exec:
               command:
-                - /usr/lib/trino/warm-shutdown
+                - /usr/lib/trino/bin/warm-shutdown
         volumes:
           - name: trino-scripts
             configMap:
