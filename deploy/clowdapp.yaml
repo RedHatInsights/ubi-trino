@@ -173,6 +173,7 @@ objects:
       security.config-file=/etc/trino/rules.json
     jvm.config: |-
       -server
+      -agentpath:/usr/lib/trino/bin/libjvmkill.so
       -Xmx${MAX_HEAP_SIZE}
       -XX:InitialRAMPercentage=80
       -XX:+UseContainerSupport
