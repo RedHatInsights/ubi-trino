@@ -252,7 +252,6 @@ spec:
           values:
             - "false"
     - name: clamav-scan
-      displayName: "clamav-scan-$(params.image-arch)"
       matrix:
         params:
           - name: image-arch
@@ -445,12 +444,12 @@ spec:
       description: Path to a file with build arguments for buildah, see https://www.mankier.com/1/buildah-build#--build-arg-file
       type: string
       default: ""
-    - name: build-platforms
-      description: List of platforms to build the container images on. The available set of values is determined by the configuration of the multi-platform-controller.
-      type: array
-      default:
-        - linux/x86_64
-        - linux/arm64
+    # - name: build-platforms
+    #   description: List of platforms to build the container images on. The available set of values is determined by the configuration of the multi-platform-controller.
+    #   type: array
+    #   default:
+    #     - linux/x86_64
+    #     - linux/arm64
     - name: tag-prefix
       description: Prefix added to additional tags
       type: string
