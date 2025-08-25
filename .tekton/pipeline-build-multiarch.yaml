@@ -252,6 +252,11 @@ spec:
           values:
             - "false"
     - name: clamav-scan
+      matrix:
+        params:
+          - name: image-arch
+            value:
+              - $(params.build-platforms)
       params:
         - name: image-digest
           value: $(tasks.build-image-manifest.results.IMAGE_DIGEST)
