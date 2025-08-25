@@ -61,7 +61,7 @@ RUN \
     touch /tmp/overlay/usr/libexec/grepconf.sh && \
     chmod +x /tmp/overlay/usr/libexec/grepconf.sh && \
     yum update -y && \
-    yum install --installroot /tmp/overlay --setopt install_weak_deps=false --nodocs -y \
+    yum install --installroot /tmp/overlay --setopt install_weak_deps=false --nodocs -y --releasever=9 \
     less \
     jq `# used by clowdapp` \
     curl-minimal grep `# required by health-check` \
@@ -102,21 +102,6 @@ RUN \
     useradd trino --uid 1000 --gid 1000 --create-home && \
     mkdir -p /usr/lib/trino /data/trino/{data,logs,spill} && \
     chown -R "trino:trino" /usr/lib/trino /data/trino
-
-
-# https://docs.oracle.com/javase/7/docs/technotes/guides/net/properties.html
-# Java caches DNS results forever. Don't cache DNS results forever.
-# RUN touch $JAVA_HOME/lib/security/java.security \
-#     && chown 1000:0 $JAVA_HOME/lib/security/java.security \
-#     && chmod g+rw $JAVA_HOME/lib/security/java.security \
-#     && sed -i '/networkaddress.cache.ttl/d' $JAVA_HOME/lib/security/java.security \
-#     && sed -i '/networkaddress.cache.negative.ttl/d' $JAVA_HOME/lib/security/java.security \
-#     && echo 'networkaddress.cache.ttl=0' >> $JAVA_HOME/lib/security/java.security \
-#     && echo 'networkaddress.cache.negative.ttl=0' >> $JAVA_HOME/lib/security/java.security
-
-# RUN chown -R 1000:0 ${HOME} /etc/passwd $(readlink -f ${JAVA_HOME}/lib/security/cacerts) \
-#     && chmod -R 774 /etc/passwd $(readlink -f ${JAVA_HOME}/lib/security/cacerts) \
-#     && chmod -R 775 ${HOME}
 
 COPY --from=downloader ${WORK_DIR}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar /usr/lib/trino/jmx_exporter.jar
 COPY --from=downloader ${WORK_DIR}/trino-cli-${TRINO_VERSION}-executable.jar /usr/bin/trino
