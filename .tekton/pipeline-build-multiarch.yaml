@@ -252,6 +252,11 @@ spec:
           values:
             - "false"
     - name: clamav-scan
+      matrix:
+        params:
+          - name: image-arch
+            value:
+              - $(params.build-platforms)
       params:
         - name: image-digest
           value: $(tasks.build-image-manifest.results.IMAGE_DIGEST)
@@ -268,11 +273,6 @@ spec:
             value: quay.io/konflux-ci/tekton-catalog/task-clamav-scan:0.3@sha256:b0bd59748cda4a7abf311e4f448e6c1d00c6b6d8c0ecc1c2eb33e08dc0e0b802
           - name: kind
             value: task
-      when:
-        - input: "{{ event_type }}"
-          operator: in
-          values:
-            - "push"
     - name: sast-shell-check
       params:
         - name: image-digest
