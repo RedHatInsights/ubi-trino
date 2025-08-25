@@ -273,11 +273,6 @@ spec:
             value: quay.io/konflux-ci/tekton-catalog/task-clamav-scan:0.3@sha256:b0bd59748cda4a7abf311e4f448e6c1d00c6b6d8c0ecc1c2eb33e08dc0e0b802
           - name: kind
             value: task
-      when:
-        - input: "{{ event_type }}"
-          operator: in
-          values:
-            - "push"
     - name: sast-shell-check
       params:
         - name: image-digest
@@ -444,12 +439,12 @@ spec:
       description: Path to a file with build arguments for buildah, see https://www.mankier.com/1/buildah-build#--build-arg-file
       type: string
       default: ""
-    # - name: build-platforms
-    #   description: List of platforms to build the container images on. The available set of values is determined by the configuration of the multi-platform-controller.
-    #   type: array
-    #   default:
-    #     - linux/x86_64
-    #     - linux/arm64
+    - name: build-platforms
+      description: List of platforms to build the container images on. The available set of values is determined by the configuration of the multi-platform-controller.
+      type: array
+      default:
+        - linux/x86_64
+        - linux/arm64
     - name: tag-prefix
       description: Prefix added to additional tags
       type: string
