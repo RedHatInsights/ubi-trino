@@ -8,7 +8,8 @@ FROM registry.access.redhat.com/ubi9/ubi-minimal:latest AS downloader
 ARG TARGETARCH
 ARG PROMETHEUS_VERSION
 ARG TRINO_VERSION
-ARG SERVER_LOCATION="https://repo1.maven.org/maven2/io/trino/trino-server/${TRINO_VERSION}/trino-server-${TRINO_VERSION}.tar.gz"
+ARG TRINO_SERVER_LOCATION="https://github.com/trinodb/trino/releases/download/${TRINO_VERSION}/trino-server-${TRINO_VERSION}.tar.gz"
+ARG TRINO_CLI_LOCATION="https://github.com/trinodb/trino/releases/download/${TRINO_VERSION}/trino-cli-${TRINO_VERSION}"
 ARG CLIENT_LOCATION="https://repo1.maven.org/maven2/io/trino/trino-cli/${TRINO_VERSION}/trino-cli-${TRINO_VERSION}-executable.jar"
 ARG PROMETHEUS_JMX_EXPORTER_LOCATION="https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/${PROMETHEUS_VERSION}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar"
 ARG WORK_DIR
@@ -37,9 +38,9 @@ RUN \
 
 RUN \
     set -xeuo pipefail && \
-    curl --progress-bar --location --fail --show-error ${SERVER_LOCATION} | tar -zxf - -C ${WORK_DIR} && \
-    curl --progress-bar --location --fail --show-error --output ${WORK_DIR}/trino-cli-${TRINO_VERSION}-executable.jar ${CLIENT_LOCATION} && \
-    chmod +x ${WORK_DIR}/trino-cli-${TRINO_VERSION}-executable.jar && \
+    curl --progress-bar --location --fail --show-error ${TRINO_SERVER_LOCATION} | tar -zxf - -C ${WORK_DIR} && \
+    curl --progress-bar --location --fail --show-error --output ${WORK_DIR}/trino-cli-${TRINO_VERSION} ${TRINO_CLI_LOCATION} && \
+    chmod +x ${WORK_DIR}/trino-cli-${TRINO_VERSION} && \
     curl --progress-bar --location --fail --show-error --output ${WORK_DIR}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar ${PROMETHEUS_JMX_EXPORTER_LOCATION} && \
     chmod +x ${WORK_DIR}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar
 
@@ -119,7 +120,7 @@ RUN \
 #     && chmod -R 775 ${HOME}
 
 COPY --from=downloader ${WORK_DIR}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar /usr/lib/trino/jmx_exporter.jar
-COPY --from=downloader ${WORK_DIR}/trino-cli-${TRINO_VERSION}-executable.jar /usr/bin/trino
+COPY --from=downloader ${WORK_DIR}/trino-cli-${TRINO_VERSION} /usr/bin/trino
 COPY --from=downloader --chown=trino:trino ${WORK_DIR}/trino-server-${TRINO_VERSION} /usr/lib/trino
 COPY --from=downloader --chown=trino:trino /libjvmkill.so /usr/lib/trino/bin
 COPY --chown=trino:trino bin/ /usr/lib/trino/bin/
