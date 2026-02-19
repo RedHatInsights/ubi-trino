@@ -55,7 +55,7 @@ spec:
           memory: 1Gi
 
   timeouts:
-    tasks: 2h
+    tasks: 1h30m
 
   workspaces:
     - name: git-auth
