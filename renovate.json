@@ -5,5 +5,15 @@
     "updateNotScheduled": false,
     "schedule": [
         "on Tuesday after 3am and before 10am"
+    ],
+    "packageRules": [
+        {
+            "matchManagers": [
+                "dockerfile"
+            ],
+            "addLabels": [
+                "base-image"
+            ]
+        }
     ]
 }
