@@ -3,7 +3,7 @@ ARG PROMETHEUS_VERSION=1.0.1
 ARG TRINO_VERSION=483
 ARG WORK_DIR="/tmp"
 
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.8-1785214301 AS downloader
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.8-1786380870 AS downloader
 
 ARG TARGETARCH
 ARG PROMETHEUS_VERSION
@@ -54,7 +54,7 @@ RUN mkdir ${to_delete} \
     && rm -rf ${to_delete}
 ###########################
 
-FROM registry.access.redhat.com/ubi9/ubi:9.8-1785214350 AS packages
+FROM registry.access.redhat.com/ubi9/ubi:9.8-1786416589 AS packages
 
 RUN \
     set -xeuo pipefail && \
@@ -74,7 +74,7 @@ RUN \
 
 
 # Final container image:
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.8-1785214301 AS final
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.8-1786380870 AS final
 
 ARG JDK_VERSION
 ARG PROMETHEUS_VERSION
