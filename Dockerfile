@@ -1,9 +1,9 @@
 ARG JDK_VERSION=jdk-25.0.2+10  # https://api.adoptium.net/v3/info/release_names?image_type=jdk&page=0&page_size=100&project=jdk&release_type=ga&semver=false&sort_method=DEFAULT&sort_order=DESC&vendor=eclipse
 ARG PROMETHEUS_VERSION=1.0.1
-ARG TRINO_VERSION=481
+ARG TRINO_VERSION=483
 ARG WORK_DIR="/tmp"
 
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.8-1785214301 AS downloader
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.8-1789349365 AS downloader
 
 ARG TARGETARCH
 ARG PROMETHEUS_VERSION
@@ -54,7 +54,7 @@ RUN mkdir ${to_delete} \
     && rm -rf ${to_delete}
 ###########################
 
-FROM registry.access.redhat.com/ubi9/ubi:9.8-1785214350 AS packages
+FROM registry.access.redhat.com/ubi9/ubi:9.8-1789348643 AS packages
 
 RUN \
     set -xeuo pipefail && \
@@ -74,7 +74,7 @@ RUN \
 
 
 # Final container image:
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.8-1785214301 AS final
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.8-1789349365 AS final
 
 ARG JDK_VERSION
 ARG PROMETHEUS_VERSION
