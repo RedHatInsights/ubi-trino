@@ -54,7 +54,7 @@ RUN mkdir ${to_delete} \
     && rm -rf ${to_delete}
 ###########################
 
-FROM registry.access.redhat.com/ubi9/ubi:9.8-1789348643 AS packages
+FROM registry.access.redhat.com/ubi9/ubi:9.8-1789646010 AS packages
 
 RUN \
     set -xeuo pipefail && \
