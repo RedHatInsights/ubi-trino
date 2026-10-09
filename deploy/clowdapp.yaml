@@ -208,6 +208,7 @@ objects:
       query.max-memory=${QUERY_MAX_MEMORY}
       query.max-total-memory=${QUERY_MAX_TOTAL_MEMORY}
       memory.heap-headroom-per-node=${MEMORY_HEAP_HEADROOM_PER_NODE}
+      experimental.thread-per-driver-scheduler-enabled=${WORKER_THREAD_PER_DRIVER_SCHEDULER_ENABLED}
     rules.json: |-
       {
         "catalogs": [
@@ -793,6 +794,16 @@ parameters:
   displayName: memory.heap-headroom-per-node
   name: MEMORY_HEAP_HEADROOM_PER_NODE
   value: '1GB'
+  required: true
+- description: >-
+    Run splits on Trino's thread-per-driver task executor (Trino's default in 481). Its
+    SplitRunner pool is unbounded (one platform thread per driver), so busy
+    workers can exceed the pod's process limit (OpenShift podPidsLimit, 4096) and die with
+    "unable to create native thread". false = time-sharing executor with a fixed pool of
+    task.max-worker-threads threads.
+  displayName: experimental.thread-per-driver-scheduler-enabled (workers)
+  name: WORKER_THREAD_PER_DRIVER_SCHEDULER_ENABLED
+  value: 'false'
   required: true
 
 # Trino Hive config
