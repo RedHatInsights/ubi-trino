@@ -1,43 +1,44 @@
 # ubi-trino
 
-Docker Image build from RHEL UBI base image
+Trino container image built on RHEL UBI.
 
-# Workflow
 
-## Basic workflow
+## Dependency updates
 
-1. Branch from `main`
-2. Make changes
-3. Increment build number file value
-4. Commit and Push
-5. Create PR merging into `main`
-6. Get reviewed and approved
+[Renovate via MintMaker](https://konflux-ci.dev/docs/mintmaker/user/) updates the Dockerfile base images and CI dependency references using `renovate.json` and its inherited preset. Review and merge those PRs through the usual Konflux checks. A separate GitHub Actions base-image update workflow is not needed.
 
-## Build new version of Trino
+The retired workflow also compared installed RPMs in the legacy `quay.io/cloudservices/ubi-trino:latest` image. Renovate's base-image PRs do not replace that RPM-inventory comparison or provide a scheduled rebuild solely for package-repository changes; trigger a Konflux rebuild separately when needed.
 
-1. Checkout `main` and pull
-2. Execute `check_upstream.sh` If it reports _Up to date with trinodb/trino_ then stop.
-3. If it reports a new trino version number, then branch from `main` for that new version.
-4. Update `Dockerfile` : `ARG PRESTO_VERSION` setting it to the version reported.
-5. Execute `get_trino_version.sh` to make sure that the output matches the new trino version.
-6. Increment the value in `image_build_num.txt` with `bump-image-tag.sh`.
-7. Run a test build by executing `pr_check.sh`
-8. If successful, then commit changes and push branch.
-9. Create a PR, this should execute a PR check script.
-10. If successful, get approval and merge.
+The checked-in Renovate configuration does not define custom managers for the `TRINO_VERSION`, `JDK_VERSION`, or `PROMETHEUS_VERSION` build arguments. Review those pins manually, including the [Trino release notes](https://trino.io/docs/current/release.html), Java runtime requirements, JMX Exporter releases, and any affected JVM/server/catalog
+configuration. Configuration in `deploy/clowdapp.yaml` overrides image defaults and must be reviewed as well.
 
-* Note: If the UBI image version is updated in the Dockerfile you must also update the `check-image.yml` workflow.
 
-# Utility Scripts
+## Development workflow
 
-* `check_upstream.sh` : Check the current version of trino set in the Dockerfile against release tags from the `trinodb/trino` repo.
-* `get_trino_version.sh` : Get the current trino version from the `Dockerfile`.
-* `get_latest_repo_release_tag.sh` : Get the latest release tag from the `trinodb/trino repo`.
-* `docker-build-dev.sh` : Executes a local test build of the docker image.
-* `get_image_tag.sh` : Return the image tag made from the hive version and the build number from `image_build_num.txt`
+1. Create a branch from `main` and make the required changes.
+2. For a Trino upgrade, update `ARG TRINO_VERSION` in `Dockerfile` and verify it with `./scripts/get_trino_version.sh`. Use `./scripts/check_upstream.sh` to compare against the latest upstream numeric release tag; it exits with status 1 when an upgrade is available and accepts `quiet` to suppress output.
+3. When incrementing the image build number, run `./scripts/bump-image-tag.sh`. It updates and stages `image_build_num.txt`.
+4. Build locally and exercise the affected configuration and queries. For example:
+   ```sh
+   docker build --build-arg VERSION="$(./scripts/get_image_tag.sh)" \
+     -t ubi-trino:local .
+   ```
+5. Commit, push, and open a PR against `main`. Konflux runs the multi-architecture
+   build and configured checks. Review those results before merging.
 
-# Integration Scripts
 
-* `pr_check.sh` : PR check script (You should not need to modify this)
-* `build_deploy.sh` : Build and deploy to Red Hat cloudservices quay org. (You should not need to modify this script)
+## Build pipeline and utility scripts
+
+The PipelineRuns in `.tekton/pull_request.yaml` and `.tekton/push.yaml` use `pipeline-build-multiarch`. Its `get-version` task calls `scripts/get_image_tag.sh`, which combines `TRINO_VERSION` with `image_build_num.txt`. The result is passed as the Dockerfile `VERSION` build argument for the image's `version` label. Published image tags are supplied separately by the pipeline using commit identifiers and PR prefixes.
+
+Development/build helpers live in `scripts/` and resolve repository files relative to their own location, so they can be invoked from another directory. Container runtime entrypoints remain in `bin/`, which the Dockerfile installs into the image.
+
+- `check_upstream.sh`: compares the configured Trino version with upstream; retained because Renovate does not track this build argument.
+- `get_latest_repo_release_tag.sh`: fetches the latest numeric upstream Trino release tag; used by `check_upstream.sh`.
+- `get_trino_version.sh`: reads `TRINO_VERSION` from `Dockerfile`; used by `get_image_tag.sh`.
+- `get_image_tag.sh`: returns `<Trino version>-<build number>`; used by Konflux and the local build wrapper.
+- `bump-image-tag.sh`: increments and stages the build-number file.
+- `docker-build-dev.sh`: local build wrapper using `get_image_tag.sh`; creates local `quay.io/cloudservices/ubi-trino` tags and does not push them.
+
+The `get-version` task definition is maintained in `.tekton/task-get-version.yaml`. The pipeline passes the script path explicitly, so the directory move also works with the installed Task's previous default path. Future changes to the Task body still need to be applied to the Konflux namespace through the usual Task-management process.
 
