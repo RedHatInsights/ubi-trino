@@ -14,7 +14,7 @@ spec:
     - name: script
       description: Path to script that will return the version string
       type: string
-      default: ./get_image_tag.sh
+      default: ./scripts/get_image_tag.sh
 
   results:
     - name: version
