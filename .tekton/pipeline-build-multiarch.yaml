@@ -73,6 +73,8 @@ spec:
       params:
         - name: source_artifact
           value: $(tasks.clone-repository.results.SOURCE_ARTIFACT)
+        - name: script
+          value: ./scripts/get_image_tag.sh
       taskRef:
         name: get-version
     - name: build-image
