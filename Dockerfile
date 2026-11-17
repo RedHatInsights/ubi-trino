@@ -105,15 +105,15 @@ RUN \
     chown -R "trino:trino" /usr/lib/trino /data/trino
 
 
-# https://docs.oracle.com/javase/7/docs/technotes/guides/net/properties.html
-# Java caches DNS results forever. Don't cache DNS results forever.
-# RUN touch $JAVA_HOME/lib/security/java.security \
-#     && chown 1000:0 $JAVA_HOME/lib/security/java.security \
-#     && chmod g+rw $JAVA_HOME/lib/security/java.security \
-#     && sed -i '/networkaddress.cache.ttl/d' $JAVA_HOME/lib/security/java.security \
-#     && sed -i '/networkaddress.cache.negative.ttl/d' $JAVA_HOME/lib/security/java.security \
-#     && echo 'networkaddress.cache.ttl=0' >> $JAVA_HOME/lib/security/java.security \
-#     && echo 'networkaddress.cache.negative.ttl=0' >> $JAVA_HOME/lib/security/java.security
+# JVM DNS caching to prevent transient DNS failures from cascading
+# - negative.ttl=0: don't cache DNS failures — allows retries to do real lookups
+# - ttl=5: AWS recommendation for RDS/ELB endpoints
+# - stale.ttl=3600: serve last-known-good IP when refresh fails (Java 21+)
+RUN sed -i \
+    -e 's/^networkaddress.cache.negative.ttl=10/networkaddress.cache.negative.ttl=0/' \
+    -e 's/^#networkaddress.cache.ttl=-1/networkaddress.cache.ttl=5/' \
+    -e 's/^#networkaddress.cache.stale.ttl=0/networkaddress.cache.stale.ttl=3600/' \
+    $JAVA_HOME/conf/security/java.security
 
 # RUN chown -R 1000:0 ${HOME} /etc/passwd $(readlink -f ${JAVA_HOME}/lib/security/cacerts) \
 #     && chmod -R 774 /etc/passwd $(readlink -f ${JAVA_HOME}/lib/security/cacerts) \
