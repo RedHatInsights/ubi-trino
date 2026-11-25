@@ -1,6 +1,6 @@
-ARG JDK_VERSION=jdk-25.0.2+10  # https://api.adoptium.net/v3/info/release_names?image_type=jdk&page=0&page_size=100&project=jdk&release_type=ga&semver=false&sort_method=DEFAULT&sort_order=DESC&vendor=eclipse
-ARG PROMETHEUS_VERSION=1.0.1
-ARG TRINO_VERSION=483
+ARG JDK_VERSION=jdk-25.0.5+8  # https://api.adoptium.net/v3/info/release_names?image_type=jdk&page=0&page_size=100&project=jdk&release_type=ga&semver=false&sort_method=DEFAULT&sort_order=DESC&vendor=eclipse
+ARG PROMETHEUS_VERSION=1.7.0
+ARG TRINO_VERSION=484
 ARG WORK_DIR="/tmp"
 
 FROM registry.access.redhat.com/ubi9/ubi-minimal:9.8-1794186349 AS downloader
@@ -11,7 +11,7 @@ ARG TRINO_VERSION
 ARG TRINO_SERVER_LOCATION="https://github.com/trinodb/trino/releases/download/${TRINO_VERSION}/trino-server-${TRINO_VERSION}.tar.gz"
 ARG TRINO_CLI_LOCATION="https://github.com/trinodb/trino/releases/download/${TRINO_VERSION}/trino-cli-${TRINO_VERSION}"
 ARG CLIENT_LOCATION="https://repo1.maven.org/maven2/io/trino/trino-cli/${TRINO_VERSION}/trino-cli-${TRINO_VERSION}-executable.jar"
-ARG PROMETHEUS_JMX_EXPORTER_LOCATION="https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/${PROMETHEUS_VERSION}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar"
+ARG PROMETHEUS_JMX_EXPORTER_LOCATION="https://github.com/prometheus/jmx_exporter/releases/download/${PROMETHEUS_VERSION}/jmx_prometheus_javaagent-${PROMETHEUS_VERSION}.jar"
 ARG WORK_DIR
 ARG JDK_VERSION
 

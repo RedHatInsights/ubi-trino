@@ -171,10 +171,11 @@ objects:
       -Dfile.encoding=UTF-8
       -Djdk.attach.allowAttachSelf=true
       -Djdk.nio.maxCachedBufferSize=2000000
+      --add-modules=jdk.incubator.vector
       -verbose:gc
       -Xlog:gc*:/data/trino/logs/gc.log
       -javaagent:/usr/lib/trino/jmx_exporter.jar=9000:/etc/trino/catalog/config.yaml
-      # Reduce starvation of threads by GClocker, recommend to set about the number of cpu cores (JDK-8192647)
+      # Enable the diagnostic G1 pinned-region retention setting below.
       -XX:+UnlockDiagnosticVMOptions
       # Allow loading dynamic agent used by JOL
       -XX:+EnableDynamicAgentLoading
@@ -362,7 +363,7 @@ objects:
       hive.metastore.uri=thrift://hive-metastore:10000
       hive.parquet.use-column-names=true
       hive.storage-format=Parquet
-      fs.native-s3.enabled=true
+      fs.s3.enabled=true
       s3.path-style-access=true
       s3.region=us-east-1
     glue.properties: |-
@@ -377,7 +378,7 @@ objects:
       hive.parquet.use-column-names=true
       hive.recursive-directories=true
       hive.storage-format=Parquet
-      fs.native-s3.enabled=true
+      fs.s3.enabled=true
       s3.path-style-access=true
       s3.region=${AWS_REGION}
       hive.metastore.glue.region=${AWS_REGION}
