@@ -3,7 +3,7 @@ ARG PROMETHEUS_VERSION=1.7.0
 ARG TRINO_VERSION=484
 ARG WORK_DIR="/tmp"
 
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.8-1794186349 AS downloader
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.9-1795198179 AS downloader
 
 ARG TARGETARCH
 ARG PROMETHEUS_VERSION
@@ -74,7 +74,7 @@ RUN \
 
 
 # Final container image:
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.8-1794186349 AS final
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.9-1795198179 AS final
 
 ARG JDK_VERSION
 ARG PROMETHEUS_VERSION
